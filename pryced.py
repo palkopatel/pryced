@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 
+# ozon.ru prices watcher 
+# скрипт для наблюдения за указанными книгами на ozon.rus
+
 from BeautifulSoup import BeautifulSoup
 import datetime # для datetime.datetime.now()
 import sqlite3
