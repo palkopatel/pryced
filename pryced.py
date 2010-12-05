@@ -94,14 +94,15 @@ def insert_new_price_into_db(connect, results):
    connect.commit()
    print U'Цены обновлены.'
 
-def load_new_price(connect, now_day):
-   """ получение и сохранение в свою базу текущих цен для имеющихся книг
+def load_new_price(connect, now_day, insert_mode):
+   """ получение текущих цен для имеющихся книг
+   "   сохранение цен в свою базу при insert_mode == 1
    
    """
    cursor = connect.cursor()
       # перебор книг в базе
    cursor.execute('select links.id, links.urlname, links.author || ", " || links.title \
-                        , min(prices.price)\
+                        , min(prices.price), max(prices.price)\
                    from links \
                    left join prices on links.id = prices.link \
                    group by links.id, links.author, links.title \
@@ -109,12 +110,18 @@ def load_new_price(connect, now_day):
    rows = cursor.fetchall()
    results = []
    for row in rows:
-         # получение текущей цены с сайта
-      price = load_link(connect, now_day, row[1], 0)
-      print row[1] + U' : ' + row[2] + U'  : сейчас: ' + str(price) + U' : минимум: ' + str(row[3])
+      color_sym = U''
+      if insert_mode == 1: # получение текущей цены с сайта
+         price = load_link(connect, now_day, row[1], 0)
+         if int(price) <= int(row[3]): color_sym = U'\033[1;35m'
+      else: price = 0
+      print row[1], U':', row[2], U':',\
+            color_sym, U'сейчас: ' + str(price), U'\033[1;m,',\
+            U'минимум: ' + str(row[3]), U',',\
+            U'максимум: ' + str(row[4])
       results.insert(0, (now_day, row[0], price) )
    cursor.close()
-   insert_new_price_into_db(connect, results)
+   if insert_mode == 1: insert_new_price_into_db(connect, results)
 
 def add_new_book(connect, now_day, url_name):
    """ добавление ссылки на книгу в базу
@@ -137,7 +144,11 @@ def usage_message():
    """ сообщение о правильном использовании
    
    """
-   print U'использование:',  sys.argv[0], U'-a <ссылка на книгу на ozon.ru> | -g\n\t-a <ссылка на книгу на ozon.ru> - добавить книгу в базу\n\t-g - получить текущие цены с сайта'
+   print U'использование:',\
+         sys.argv[0], U'{-a <ссылка на книгу на ozon.ru> |',\
+          '-g | -s}\n\t-a <ссылка на книгу на ozon.ru> - добавить книгу в базу',\
+          '\n\t-g - получить текущие цены с сайта и сохранить их в базу'\
+          '\n\t-s - получить цены с сайта, не сохраняя их в базу'
 
 try:
        # значение даты для вставки в базу
@@ -146,9 +157,11 @@ try:
    if len(sys.argv) > 2:
       if sys.argv[1] == '-a': # добавление ссылки на книгу в базу
          add_new_book(connect, now_day, sys.argv[2])
-   elif len(sys.argv) > 1 and sys.argv[1] == '-g': # добавление текущих цен в базу
+   elif len(sys.argv) > 1 and (sys.argv[1] == '-g' or sys.argv[1] == '-s'): # добавление текущих цен в базу
       try:
-         load_new_price(connect, now_day)
+         if sys.argv[1] == '-g': insert_mode = 1
+         else: insert_mode = 0
+         load_new_price(connect, now_day, insert_mode)
       except sqlite3.Error, e:
          print U'Ошибка при выполнении:', e.args[0]
    else:
