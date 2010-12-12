@@ -34,6 +34,7 @@ def readru_parse_book(soup):
    title = soup.find('h1').string
       # найти таблицу с атрибутом id равным book_fields
    table = soup.find('table', {'id':'book_fields'})
+   serial = ''
    for row in table.findAll('tr'): # перебрать строки
       for cell in row.findAll('td', {'class':'f'}): # перебрать ячейки в строке
          if cell.string.find(U'Автор') > -1: # найти ячейку с именем автора
