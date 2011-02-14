@@ -112,15 +112,19 @@ def load_new_price(connect, now_day, insert_mode):
       color_sym = ''
       if insert_mode == 1: # получение текущей цены с сайта
          price = load_link(connect, now_day, row[1], 0)
-         if price != 0 and price <= int(row[3]): color_sym = U'\033[1;35m'
+         if price != 0 :
+            if price < int(row[3]): color_sym = U'\033[1;35m'
+            elif price == int(row[3]): color_sym = '\033[1;36m'
       else: price = 0
       print row[1], ':', row[2], ':',\
             color_sym + U'сейчас: ' + str(price) + U'\033[1;m,',\
             U'минимум: ' + str(row[3]) + U',',\
             U'максимум: ' + str(row[4])
-      results.insert(0, (now_day, row[0], price) )
+      if insert_mode == 1 and price != 0: 
+         results.insert(0, (now_day, row[0], price) )
    cursor.close()
-   if insert_mode == 1 and price != 0: insert_new_price_into_db(connect, results)
+   if len(results) > 0:
+      insert_new_price_into_db(connect, results)
 
 def add_new_book(connect, now_day, url_name):
    """ добавление ссылки на книгу в базу

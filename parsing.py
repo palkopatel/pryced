@@ -13,7 +13,22 @@ def ozonru_parse_book(soup):
    fields = soup.find('title').string.split(' | ')
    desc2 = fields[0]
    title = fields[1]
-   author = fields[2]
+   author_raw = fields[2]
+      # фамилия автора идет в конце (везде в коде страницы),
+      # поэтому надо ее переставить в начало для "хорошей" сортировки
+   author_list = author_raw.split(' ')
+   author = ''
+   try:
+         # перестановка в списке
+      author_list.insert(0, author_list.pop(len(author_list)-1))
+         # перенос содержимого списка в строку
+      first = 1
+      for name_part in author_list:
+         if first == 0: author += ' '
+         else: first = 0
+         author += name_part
+   except:
+      pass
    try:
       serial = fields[3] 
       desc1 = fields[4]
