@@ -105,7 +105,7 @@ def load_new_price(connect, now_day, insert_mode):
                    from links \
                    left join prices on links.id = prices.link \
                    group by links.id, links.author, links.title \
-                   order by links.author, links.title')
+                   order by links.author, links.title, links.urlname')
    rows = cursor.fetchall()
    results = []
    for row in rows:
@@ -116,10 +116,17 @@ def load_new_price(connect, now_day, insert_mode):
             if price < int(row[3]): color_sym = U'\033[1;35m'
             elif price == int(row[3]): color_sym = '\033[1;36m'
       else: price = 0
-      print row[1], ':', row[2], ':',\
+         # сокращенное название сайта с подцветкой
+      if row[1].find(U'ozon.ru') > -1:
+         site = U'\033[1;46mozon.ru\033[1;m'
+      elif row[1].find(U'read.ru') > -1: 
+         site = U'\033[1;43mread.ru\033[1;m'
+      else:
+         site = 'none'
+      print site + U': ' + row[2] + U';',\
             color_sym + U'сейчас: ' + str(price) + U'\033[1;m,',\
             U'минимум: ' + str(row[3]) + U',',\
-            U'максимум: ' + str(row[4])
+            U'максимум: ' + str(row[4]) + U'; ' + row[1]
       if insert_mode == 1 and price != 0: 
          results.insert(0, (now_day, row[0], price) )
    cursor.close()
