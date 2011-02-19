@@ -56,8 +56,84 @@ def readru_parse_book(soup):
             author = row.find('a').string
          if cell.string.find(U'Серия') > -1: # найти ячейку с названием серии
             serial = row.find('a').string
-   price_tag = soup.find('span', {'class':'price '})
-   pos_end = price_tag.renderContents().find('<')
-   price = price_tag.renderContents()[0:pos_end]
+   try:
+      price_tag = soup.find('span', {'class':'price '})
+      pos_end = price_tag.renderContents().find('<')
+      price = price_tag.renderContents()[0:pos_end]
+   except:
+      price = '0'
    return (title, author, serial, '', '', price)
+
+def myshop_parse_book(soup):
+   """ разбор страницы с my-shop.ru
+   
+   """
+   # найти первую форму с атрибутом name равным form1,
+   # разбить на отдельные ячейки и извлечь из 0-й ячейки тег h1
+   try:
+      form = soup.find('form', attrs={'name':'form1'})
+      td = form.findAll('td')
+      title = td[0].find('h1').string
+   except:
+      title = ''
+   # извлечь теги 'td' без атрибутов, в каждом найти контекст со словом 'Серия'
+   try:
+      serial = ''
+      td2 = soup.findAll(lambda tag: len(tag.attrs) == 0 and tag.name == 'td')
+      for td2_row in td2:
+         i = 0
+         for cnt in td2_row.contents:
+            i += 1
+            try:
+               if cnt.find(U'Серия') > -1:
+                  serial = td2_row.contents[i].string
+                  break
+            except:
+               pass
+   except:
+      serial = ''
+   # извлечь теги span, найти среди них содержащий слово 'Автор'
+   # и получить в нем имя автора из тега 'a'
+   author = ''
+   span = soup.findAll('span', attrs={'class':'small1'})
+   for span_row in span:
+      # случай явного указания автора
+      if len(span_row.contents) == 1:
+         if span_row.string.find(U'Автор') > -1:
+            author = span_row.string.split(': ')[1]
+            break
+      # случай, когда автор указан ссылкой
+      elif len(span_row.contents) > 1:
+         try:
+            if span_row.contents[0].find(U'Автор') > -1:
+               author = span_row.find('a').string
+               break
+         except:
+            pass
+   # извлечь цену из определенно отформатированной ячейки
+   b = soup.findAll('b')
+   for price_row in b:
+      price_row_str = price_row.string
+      try:
+         if price_row_str.find(U'Цена:') > -1:
+            price = price_row_str.split('&nbsp;')[1]
+      except:
+         price = '0'
+   return (title, author, serial, '', '', price)
+
+def test_url(url_name):
+   """ функция для тестирования (запуск с аргументом -t <ссылка>)
+   
+   """
+   f = urllib2.urlopen(url_name)
+   datas = f.read()
+   f.close()
+   soup = BeautifulSoup(datas)
+   if url_name.find(U'ozon.ru') > -1:
+      (title, author, serial, desc1, desc2, price) = ozonru_parse_book(soup)
+   elif url_name.find(U'read.ru') > -1: 
+      (title, author, serial, desc1, desc2, price) = readru_parse_book(soup)
+   elif url_name.find(U'my-shop.ru') > -1: 
+      (title, author, serial, desc1, desc2, price) = myshop_parse_book(soup)
+   print title, author, serial, price
 

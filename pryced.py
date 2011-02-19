@@ -2,7 +2,7 @@
 # -*- coding: utf-8
 
 # prices watcher (ozon.ru, read.ru)
-# скрипт для наблюдения за указанными книгами на ozon.ru и read.ru
+# скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru
 
 from parsing import *
 from BeautifulSoup import BeautifulSoup
@@ -61,6 +61,8 @@ def load_link(connect, now_day, url_name, create_flag):
          (title, author, serial, desc1, desc2, price) = ozonru_parse_book(soup)
       elif url_name.find(U'read.ru') > -1: 
          (title, author, serial, desc1, desc2, price) = readru_parse_book(soup)
+      elif url_name.find(U'my-shop.ru') > -1: 
+         (title, author, serial, desc1, desc2, price) = myshop_parse_book(soup)
       else:
          return 0
       if create_flag > 0:
@@ -121,6 +123,8 @@ def load_new_price(connect, now_day, insert_mode):
          site = U'\033[1;46mozon.ru\033[1;m'
       elif row[1].find(U'read.ru') > -1: 
          site = U'\033[1;43mread.ru\033[1;m'
+      elif row[1].find(U'my-shop.ru') > -1: 
+         site = U'\033[1;47mmy-shop\033[1;m'
       else:
          site = 'none'
       print site + U': ' + row[2] + U';',\
@@ -166,6 +170,8 @@ try:
    if len(sys.argv) > 2:
       if sys.argv[1] == '-a': # добавление ссылки на книгу в базу
          add_new_book(connect, now_day, sys.argv[2])
+      elif sys.argv[1] == '-t': # проба ссылки
+         test_url(sys.argv[2])
    elif len(sys.argv) > 1 and (sys.argv[1] == '-g' or sys.argv[1] == '-s'): # добавление текущих цен в базу
       try:
          if sys.argv[1] == '-g': insert_mode = 1
