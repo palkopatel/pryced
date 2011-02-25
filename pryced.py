@@ -13,7 +13,7 @@ import urllib2
 
 def connect_to_base():
     """ подключение к базе, создание таблиц
-    
+
     """
     connect = sqlite3.connect('myozon.db')
     cursor = connect.cursor()
@@ -39,7 +39,7 @@ def connect_to_base():
 
 def load_link(connect, now_day, url_name, create_flag):
    """ загрузка новой книги в свою базу
-   
+
    """
    try:
       if create_flag > 0:
@@ -84,7 +84,7 @@ def load_link(connect, now_day, url_name, create_flag):
 
 def insert_new_price_into_db(connect, results):
    """ сохранение в свою базу цен для книг в списке results
-   
+
    """
    cursor = connect.cursor()
       # сохранение текущих цен в базе
@@ -97,7 +97,7 @@ def insert_new_price_into_db(connect, results):
 def load_new_price(connect, now_day, insert_mode):
    """ получение текущих цен для имеющихся книг
    "   сохранение цен в свою базу при insert_mode == 1
-   
+
    """
    cursor = connect.cursor()
       # перебор книг в базе
@@ -120,15 +120,15 @@ def load_new_price(connect, now_day, insert_mode):
       else: price = 0
          # сокращенное название сайта с подцветкой
       if row[1].find(U'ozon.ru') > -1:
-         site = U'\033[1;46mozon.ru\033[1;m'
+         site = U'\033[1;46mozon.ru\033[0m'
       elif row[1].find(U'read.ru') > -1: 
-         site = U'\033[1;43mread.ru\033[1;m'
+         site = U'\033[1;43mread.ru\033[0m'
       elif row[1].find(U'my-shop.ru') > -1: 
-         site = U'\033[1;47mmy-shop\033[1;m'
+         site = U'\033[1;47mmy-shop\033[0m'
       else:
          site = 'none'
       print site + U': ' + row[2] + U';',\
-            color_sym + U'сейчас: ' + str(price) + U'\033[1;m,',\
+            color_sym + U'сейчас: ' + str(price) + U'\033[0m,',\
             U'минимум: ' + str(row[3]) + U',',\
             U'максимум: ' + str(row[4]) + U'; ' + row[1]
       if insert_mode == 1 and price != 0: 
@@ -139,7 +139,7 @@ def load_new_price(connect, now_day, insert_mode):
 
 def add_new_book(connect, now_day, url_name):
    """ добавление ссылки на книгу в базу
-   
+
    """
    price = load_link(connect, now_day, url_name, 1)
       # загрузка прошла без осложнений
@@ -155,7 +155,7 @@ def add_new_book(connect, now_day, url_name):
 
 def usage_message():
    """ сообщение о правильном использовании
-   
+
    """
    print 'использование:',\
          sys.argv[0], '{-a <ссылка на книгу> |',\
