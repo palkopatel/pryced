@@ -18,8 +18,16 @@ def connect_to_base():
     connect = sqlite3.connect('myozon.db')
     cursor = connect.cursor()
     try:
+        cursor.execute('create table IF NOT EXISTS books \
+        (id integer primary key AUTOINCREMENT, \
+        isbn text, title text, author text)')
+        connect.commit()
+    except sqlite3.Error, e:
+        print 'Ошибка при создании таблицы:', e.args[0]
+    try:
         cursor.execute('create table IF NOT EXISTS links \
         (id integer primary key AUTOINCREMENT, \
+        book int,\
         urlname text, title text, author text, \
         serial text, desc1 text, desc2 text, \
         timestamp DEFAULT current_timestamp)')
@@ -34,12 +42,45 @@ def connect_to_base():
         connect.commit()
     except sqlite3.Error, e:
         print 'Ошибка при создании таблицы:', e.args[0]
+
+    # добавление колонки для версии без ISBN
+    try:
+        connect.execute('ALTER TABLE links ADD COLUMN book int;')
+        connect.execute("VACUUM")
+    except:
+        pass
     cursor.close()
     return connect
 
-def load_link(connect, now_day, url_name, create_flag):
+def insert_new_book(connect, isbn, title, author):
    """ загрузка новой книги в свою базу
 
+   """
+   book_id = 0
+   try:
+      cursor = connect.cursor()
+      cursor.execute('select id from books where isbn like ?', ['%'+isbn+'%'])
+      books_data = cursor.fetchall()
+      cursor.close()
+      if len(books_data) > 0:
+         for book_data in books_data:
+            book_id = book_data[0]
+      else:
+         try:
+            cursor = connect.cursor()
+            cursor.execute( 'insert into books (isbn, title, author) \
+               values (?, ?, ?)', (isbn, title, author) )
+            book_id = cursor.lastrowid
+            cursor.close()
+            connect.commit()
+         except sqlite3.Error, e:
+            print 'Ошибка при выполнении запроса:', e.args[0]
+   except sqlite3.Error, e:
+      print 'Ошибка при выполнении запроса:', e.args[0]
+   return book_id
+
+def load_link(connect, now_day, url_name, create_flag):
+   """ загрузка новой ссылки на книгу в свою базу
    """
    try:
       if create_flag > 0:
@@ -58,20 +99,21 @@ def load_link(connect, now_day, url_name, create_flag):
       f.close()
       soup = BeautifulSoup(datas)
       if url_name.find(U'ozon.ru') > -1:
-         (title, author, serial, desc1, desc2, price) = ozonru_parse_book(soup)
+         (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, create_flag)
       elif url_name.find(U'read.ru') > -1: 
-         (title, author, serial, desc1, desc2, price) = readru_parse_book(soup)
+         (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
       elif url_name.find(U'my-shop.ru') > -1: 
-         (title, author, serial, desc1, desc2, price) = myshop_parse_book(soup)
+         (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
       else:
          return 0
       if create_flag > 0:
          try:
+            book_id = insert_new_book(connect, isbn, title, author)
             cursor = connect.cursor()
             cursor.execute( 'insert into links \
-               (urlname, title, author, serial, desc1, desc2) \
-               values (?, ?, ?, ?, ?, ?)', \
-               (url_name, title, author, serial, desc1, desc2) )
+               (book, urlname, title, author, serial) \
+               values (?, ?, ?, ?, ?)', \
+               (book_id, url_name, title, author, serial) )
             cursor.close()
             connect.commit()
             print U'Ссылка на "' + author + U'. ' + title + U'" добавлена в базу.'
