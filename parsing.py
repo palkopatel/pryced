@@ -7,6 +7,24 @@ from BeautifulSoup import BeautifulSoup
 import urllib2
 import subprocess
 
+def convert_author_string(author_raw):
+      # фамилия автора идет в конце (везде в коде страницы),
+      # поэтому надо ее переставить в начало для "хорошей" сортировки
+   author_list = author_raw.split(' ')
+   author = ''
+   try:
+         # перестановка в списке
+      author_list.insert(0, author_list.pop(len(author_list)-1))
+         # перенос содержимого списка в строку
+      first = 1
+      for name_part in author_list:
+         if first == 0: author += ' '
+         else: first = 0
+         author += name_part
+   except:
+      pass
+   return author
+
 def ozonru_parse_book(soup, create_flag):
    """ разбор страницы с ozon.ru
    
@@ -16,21 +34,7 @@ def ozonru_parse_book(soup, create_flag):
       desc2 = fields[0]
       title = fields[1]
       author_raw = fields[2]
-         # фамилия автора идет в конце (везде в коде страницы),
-         # поэтому надо ее переставить в начало для "хорошей" сортировки
-      author_list = author_raw.split(' ')
-      author = ''
-      try:
-            # перестановка в списке
-         author_list.insert(0, author_list.pop(len(author_list)-1))
-            # перенос содержимого списка в строку
-         first = 1
-         for name_part in author_list:
-            if first == 0: author += ' '
-            else: first = 0
-            author += name_part
-      except:
-         pass
+      author = convert_author_string(author_raw)
       try:
          serial = fields[3] 
       except:
@@ -165,6 +169,38 @@ def myshop_parse_book(soup, create_flag):
          price = '0'
    return (title, author, serial, isbn, '', price)
 
+def ukazka_parse_book(soup, create_flag):
+   """ разбор страницы с ukazka.ru
+   
+   """
+   if create_flag > 0:
+      #  найти тег h1 с определенным атрибутом class
+      title = soup.find('h1', attrs={'class':'bot_pad0'}).string
+      if title[len(title)-1]=='.':
+         title = title[0:-1]
+      #  найти теги div с определенным атрибутом class
+      table = soup.findAll('div', attrs={'class':'lpad20 bot_pad'})
+      try:
+         author_raw = table[0].contents[0].find('b').contents[0]
+         author = convert_author_string(author_raw)
+      except:
+         author = ''
+      try:
+         serial = table[9].contents[0].find('a').contents[0]
+      except:
+         serial = ''
+      try:
+         isbn = table[2].contents[1].contents[0]
+      except:
+         isbn = ''
+   else:
+      title = ''
+      author = ''
+      serial = ''
+      isbn = ''
+   price = soup.find('span', attrs={'class':'price'}).string.split('&nbsp;')[0]
+   return (title, author, serial, isbn, '', price)
+
 def test_url(url_name):
    """ функция для тестирования (запуск с аргументом -t <ссылка>)
    
@@ -179,6 +215,8 @@ def test_url(url_name):
       (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
    elif url_name.find(U'my-shop.ru') > -1: 
       (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
+   elif url_name.find(U'ukazka') > -1: 
+      (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
    print 'title:  ' + title
    print 'author: ' + author
    print 'serial: ' + serial

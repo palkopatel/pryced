@@ -2,7 +2,8 @@
 # -*- coding: utf-8
 
 # prices watcher (ozon.ru, read.ru)
-# скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru
+# скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
+# ukazka.ru
 
 from parsing import *
 from BeautifulSoup import BeautifulSoup
@@ -104,6 +105,8 @@ def load_link(connect, now_day, url_name, create_flag):
          (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
       elif url_name.find(U'my-shop.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
+      elif url_name.find(U'ukazka.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
       else:
          return 0
       if create_flag > 0:
@@ -146,6 +149,7 @@ def load_new_price(connect, now_day, insert_mode):
    cursor.execute('select links.id, links.urlname, links.author || ", " || links.title \
                         , ifnull(min(prices.price),0)\
                         , ifnull(max(prices.price),0)\
+                        , links.author, links.title\
                    from links \
                    left join prices on links.id = prices.link \
                    group by links.id, links.author, links.title \
@@ -154,7 +158,7 @@ def load_new_price(connect, now_day, insert_mode):
    results = []
    for row in rows:
       color_sym = ''
-      if insert_mode == 1: # получение текущей цены с сайта
+      if insert_mode > 0: # получение текущей цены с сайта
          price = load_link(connect, now_day, row[1], 0)
          if price != 0 :
             if price < int(row[3]): color_sym = U'\033[1;35m'
@@ -167,17 +171,24 @@ def load_new_price(connect, now_day, insert_mode):
          site = U'\033[1;43mread.ru\033[0m'
       elif row[1].find(U'my-shop.ru') > -1: 
          site = U'\033[1;47mmy-shop\033[0m'
+      elif row[1].find(U'ukazka.ru') > -1: 
+         site = U'\033[1;44mukazka \033[0m'
       else:
          site = 'none'
       print site + U': ' + row[2] + U';',\
             color_sym + U'сейчас: ' + str(price) + U'\033[0m,',\
             U'минимум: ' + str(row[3]) + U',',\
             U'максимум: ' + str(row[4]) + U'; ' + row[1]
-      if insert_mode == 1 and price != 0: 
-         results.insert(0, (now_day, row[0], price) )
+      if insert_mode == 1:
+         if price != 0: 
+            results.insert(0, (now_day, row[0], price) )
+      else:
+         results.insert(len(results), (row[0], row[1], row[3], row[4], row[5], row[6], price) )
    cursor.close()
-   if len(results) > 0:
+   if insert_mode == 1 and len(results) > 0:
       insert_new_price_into_db(connect, results)
+   else:
+      return results
 
 def add_new_book(connect, now_day, url_name):
    """ добавление ссылки на книгу в базу
