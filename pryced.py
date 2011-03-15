@@ -122,7 +122,7 @@ def load_link(connect, now_day, url_name, create_flag):
             print U'Ссылка на "' + author + U'. ' + title + U'" добавлена в базу.'
          except sqlite3.Error, e:
             print 'Ошибка при выполнении запроса:', e.args[0]
-      return int(price)
+      return int(float(price.replace(',', '.')))
    except Exception, e:
       print e
       return 0
