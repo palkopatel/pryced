@@ -62,6 +62,7 @@ def readru_parse_book(soup, create_flag):
    """ разбор страницы с read.ru
    
    """
+   title = author = serial = isbn = ''
    if create_flag > 0:
       title = soup.find('h1').string
          # найти таблицу с атрибутом id равным book_fields
@@ -84,19 +85,32 @@ def readru_parse_book(soup, create_flag):
                localFile.write(u.read())
                localFile.close()
                # 3) распознать картинку с помощью gocr
-               p1 = subprocess.Popen(["pngtopnm", 'tmp~'], stdout=subprocess.PIPE)
-               p2 = subprocess.Popen(["gocr", "-"], stdin=p1.stdout, stdout=subprocess.PIPE)
+               try:
+                  p1 = subprocess.Popen(["pngtopnm", 'tmp~'], stdout=subprocess.PIPE)
+               except OSError, e:
+                 if e.errno == 2:
+                    print(U'\033[31mДля обработки ISBN надо установить пакет "netpbm" с утилитой "pngtopnm!"\033[0m')
+                 else:
+                    print e
+                 break
+               try:
+                  p2 = subprocess.Popen(["gocr", "-"], stdin=p1.stdout, stdout=subprocess.PIPE)
+               except OSError, e:
+                 if e.errno == 2:
+                    print(U'\033[31mДля распознавания ISBN надо установить пакет "gocr"!"\033[0m')
+                 else:
+                    print e
+                 break
                p1.stdout.close()
                output = p2.communicate()[0]
                # срезать в выводе "лишние" символы
                isbn = output.replace(" ", "").replace("\n", "")
+#                  print "pngtopnm not found!"
                # старый способ извлечение ISBN, который перестал работать 01-03-2011
                #isbn = row.contents[3].string.replace("\t", "").replace("\n", "").replace("\r", "")
-   else:
-      title = ''
-      author = ''
-      serial = ''
-      isbn = ''
+         else:
+            continue
+         break
    try:
       price_tag = soup.find('span', {'class':'price '})
       pos_end = price_tag.renderContents().find('<')
