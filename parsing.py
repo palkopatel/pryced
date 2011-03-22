@@ -80,16 +80,16 @@ def readru_parse_book(soup, create_flag):
                # 1) сначала получить ссылку
                piclink = row.contents[3].find('img')['src']
                # 2) загрузить картинку
-               u = urllib2.urlopen('http://read.ru' + piclink)
-               localFile = open('tmp~', 'w')
-               localFile.write(u.read())
+               urlpic = urllib2.urlopen('http://read.ru' + piclink)
+               localFile = open('tmp~', 'wb')
+               localFile.write(urlpic.read())
                localFile.close()
                # 3) распознать картинку с помощью gocr
                try:
                   p1 = subprocess.Popen(["pngtopnm", 'tmp~'], stdout=subprocess.PIPE)
                except OSError, e:
                  if e.errno == 2:
-                    print(U'\033[31mДля обработки ISBN надо установить пакет "netpbm" с утилитой "pngtopnm!"\033[0m')
+                    print(u'\033[31mДля обработки ISBN надо установить пакет "netpbm" с утилитой "pngtopnm!"\033[0m')
                  else:
                     print e
                  break
@@ -97,7 +97,7 @@ def readru_parse_book(soup, create_flag):
                   p2 = subprocess.Popen(["gocr", "-"], stdin=p1.stdout, stdout=subprocess.PIPE)
                except OSError, e:
                  if e.errno == 2:
-                    print(U'\033[31mДля распознавания ISBN надо установить пакет "gocr"!"\033[0m')
+                    print(u'\033[31mДля распознавания ISBN надо установить пакет "gocr"!"\033[0m')
                  else:
                     print e
                  break
@@ -105,7 +105,6 @@ def readru_parse_book(soup, create_flag):
                output = p2.communicate()[0]
                # срезать в выводе "лишние" символы
                isbn = output.replace(" ", "").replace("\n", "")
-#                  print "pngtopnm not found!"
                # старый способ извлечение ISBN, который перестал работать 01-03-2011
                #isbn = row.contents[3].string.replace("\t", "").replace("\n", "").replace("\r", "")
          else:
@@ -223,18 +222,18 @@ def test_url(url_name):
    datas = f.read()
    f.close()
    soup = BeautifulSoup(datas)
-   if url_name.find(U'ozon.ru') > -1:
+   if url_name.find(u'ozon.ru') > -1:
       (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, 1)
-   elif url_name.find(U'read.ru') > -1: 
+   elif url_name.find(u'read.ru') > -1: 
       (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
-   elif url_name.find(U'my-shop.ru') > -1: 
+   elif url_name.find(u'my-shop.ru') > -1: 
       (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
-   elif url_name.find(U'ukazka') > -1: 
+   elif url_name.find(u'ukazka') > -1: 
       (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
-   print 'title:  ' + title
-   print 'author: ' + author
-   print 'serial: ' + serial
-   print 'isbn:   ' + isbn
-   print 'price:  ' + price
-   print 'desc2:  ' + desc2
+   print u'title:  ' + title
+   print u'author: ' + author
+   print u'serial: ' + serial
+   print u'isbn:   ' + isbn
+   print u'price:  ' + price
+   print u'desc2:  ' + desc2
 

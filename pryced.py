@@ -24,7 +24,7 @@ def connect_to_base():
         isbn text, title text, author text)')
         connect.commit()
     except sqlite3.Error, e:
-        print 'Ошибка при создании таблицы:', e.args[0]
+        print u'Ошибка при создании таблицы:', e.args[0]
     try:
         cursor.execute('create table IF NOT EXISTS links \
         (id integer primary key AUTOINCREMENT, \
@@ -34,7 +34,7 @@ def connect_to_base():
         timestamp DEFAULT current_timestamp)')
         connect.commit()
     except sqlite3.Error, e:
-        print 'Ошибка при создании таблицы:', e.args[0]
+        print u'Ошибка при создании таблицы:', e.args[0]
     try:
         cursor.execute('create table IF NOT EXISTS prices \
         (id integer primary key AUTOINCREMENT, \
@@ -42,7 +42,7 @@ def connect_to_base():
         timestamp DEFAULT current_timestamp)')
         connect.commit()
     except sqlite3.Error, e:
-        print 'Ошибка при создании таблицы:', e.args[0]
+        print u'Ошибка при создании таблицы:', e.args[0]
 
     # добавление колонки для версии без ISBN
     try:
@@ -75,9 +75,9 @@ def insert_new_book(connect, isbn, title, author):
             cursor.close()
             connect.commit()
          except sqlite3.Error, e:
-            print 'Ошибка при выполнении запроса:', e.args[0]
+            print u'Ошибка при выполнении запроса:', e.args[0]
    except sqlite3.Error, e:
-      print 'Ошибка при выполнении запроса:', e.args[0]
+      print u'Ошибка при выполнении запроса:', e.args[0]
    return book_id
 
 def load_link(connect, now_day, url_name, create_flag):
@@ -92,20 +92,20 @@ def load_link(connect, now_day, url_name, create_flag):
          data = cursor.fetchall()
          cursor.close()
          if len(data) > 0:
-            print U'Ссылка на "' + data[0][0] + U'. ' + data[0][1] + \
-                  U'" уже существует в базе!'
+            print u'Ссылка на "' + data[0][0] + u'. ' + data[0][1] + \
+                  u'" уже существует в базе!'
             return 0;
       f = urllib2.urlopen(url_name) 
       datas = f.read()
       f.close()
       soup = BeautifulSoup(datas)
-      if url_name.find(U'ozon.ru') > -1:
+      if url_name.find(u'ozon.ru') > -1:
          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, create_flag)
-      elif url_name.find(U'read.ru') > -1: 
+      elif url_name.find(u'read.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
-      elif url_name.find(U'my-shop.ru') > -1: 
+      elif url_name.find(u'my-shop.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
-      elif url_name.find(U'ukazka.ru') > -1: 
+      elif url_name.find(u'ukazka.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
       else:
          return 0
@@ -119,9 +119,10 @@ def load_link(connect, now_day, url_name, create_flag):
                (book_id, url_name, title, author, serial) )
             cursor.close()
             connect.commit()
-            print U'Ссылка на "' + author + U'. ' + title + U'" добавлена в базу.'
+            print u'Ссылка на "' + author + u'. ' + \
+               title + u'" добавлена в базу.'
          except sqlite3.Error, e:
-            print 'Ошибка при выполнении запроса:', e.args[0]
+            print u'Ошибка при выполнении запроса:', e.args[0]
       return int(float(price.replace(',', '.')))
    except Exception, e:
       print e
@@ -137,7 +138,7 @@ def insert_new_price_into_db(connect, results):
       cursor.execute( 'insert into prices (timestamp, link, price) values (?, ?, ?)', price )
    cursor.close()
    connect.commit()
-   print 'Цены обновлены.'
+   print u'Цены обновлены.'
 
 def load_new_price(connect, now_day, insert_mode):
    """ получение текущих цен для имеющихся книг
@@ -157,28 +158,28 @@ def load_new_price(connect, now_day, insert_mode):
    rows = cursor.fetchall()
    results = []
    for row in rows:
-      color_sym = ''
+      color_sym = u''
       if insert_mode > 0: # получение текущей цены с сайта
          price = load_link(connect, now_day, row[1], 0)
          if price != 0 :
-            if price < int(row[3]): color_sym = U'\033[1;35m'
-            elif price == int(row[3]): color_sym = '\033[1;36m'
+            if price < int(row[3]): color_sym = u'\033[1;35m'
+            elif price == int(row[3]): color_sym = u'\033[1;36m'
       else: price = 0
          # сокращенное название сайта с подцветкой
-      if row[1].find(U'ozon.ru') > -1:
-         site = U'\033[1;46mozon.ru\033[0m'
+      if row[1].find(u'ozon.ru') > -1:
+         site = u'\033[1;46mozon.ru\033[0m'
       elif row[1].find(U'read.ru') > -1: 
-         site = U'\033[1;43mread.ru\033[0m'
+         site = u'\033[1;43mread.ru\033[0m'
       elif row[1].find(U'my-shop.ru') > -1: 
-         site = U'\033[1;47mmy-shop\033[0m'
+         site = u'\033[1;47mmy-shop\033[0m'
       elif row[1].find(U'ukazka.ru') > -1: 
-         site = U'\033[1;44mukazka \033[0m'
+         site = u'\033[1;44mukazka \033[0m'
       else:
-         site = 'none'
-      print site + U': ' + row[2] + U';',\
-            color_sym + U'сейчас: ' + str(price) + U'\033[0m,',\
-            U'минимум: ' + str(row[3]) + U',',\
-            U'максимум: ' + str(row[4]) + U'; ' + row[1]
+         site = u'none'
+      print site + u': ' + row[2] + u';',\
+            color_sym + u'сейчас: ' + unicode(str(price)) + u'\033[0m,',\
+            u'минимум: ' + unicode(str(row[3])) + u',',\
+            u'максимум: ' + unicode(str(row[4])) + u'; ' + row[1]
       if insert_mode == 1:
          if price != 0: 
             results.insert(0, (now_day, row[0], price) )
@@ -204,17 +205,18 @@ def add_new_book(connect, now_day, url_name):
       cursor.close()
       results.insert(0, (now_day, data[0][0], price) )
       insert_new_price_into_db(connect, results)
-      print sys.argv[2] + U': цена сейчас:', str(price)
+      print sys.argv[2] + u': цена сейчас:', str(price)
 
 def usage_message():
    """ сообщение о правильном использовании
 
    """
-   print 'использование:',\
-         sys.argv[0], '{-a <ссылка на книгу> |',\
-          '-g | -s}\n\t-a <ссылка на книгу> - добавить книгу в базу',\
-          '\n\t-g - получить текущие цены и сохранить их в базу'\
-          '\n\t-s - получить цены, не сохраняя их в базу'
+   msg = u'использование: ' + \
+         unicode(sys.argv[0]) + u' {-a <ссылка на книгу> | -g | -s}' + \
+         u'\n\t-a <ссылка на книгу> - добавить книгу в базу' +\
+         u'\n\t-g - получить текущие цены и сохранить их в базу' +\
+         u'\n\t-s - получить цены, не сохраняя их в базу'
+   print msg
 
 try:
        # значение даты для вставки в базу
@@ -231,7 +233,7 @@ try:
          else: insert_mode = 0
          load_new_price(connect, now_day, insert_mode)
       except sqlite3.Error, e:
-         print 'Ошибка при выполнении:', e.args[0]
+         print u'Ошибка при выполнении:', e.args[0]
    else:
       usage_message()
    connect.close()
