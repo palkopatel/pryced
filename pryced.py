@@ -11,6 +11,32 @@ import datetime # для datetime.datetime.now()
 import sqlite3
 import sys
 import urllib2
+from ctypes import windll
+
+handle = windll.kernel32.GetStdHandle(-11)
+win32 = sys.platform.find(u'win')
+# номера цветов текста
+FG_BLACK     = 0x0000
+FG_BLUE      = 0x0001
+FG_GREEN     = 0x0002
+FG_CYAN      = 0x0003
+FG_RED       = 0x0004
+FG_MAGENTA   = 0x0005
+FG_YELLOW    = 0x0006
+FG_GREY      = 0x0007
+FG_INTENSITY = 0x0008 # жирность текста
+# номера цветов фона
+BG_BLACK     = 0x0000
+BG_BLUE      = 0x0010
+BG_GREEN     = 0x0020
+BG_CYAN      = 0x0030
+BG_RED       = 0x0040
+BG_MAGENTA   = 0x0050
+BG_YELLOW    = 0x0060
+BG_GREY      = 0x0070
+BG_INTENSITY = 0x0080 # жирность фона
+def console_color(color):
+   windll.kernel32.SetConsoleTextAttribute(handle, color)
 
 def connect_to_base():
     """ подключение к базе, создание таблиц
@@ -159,27 +185,62 @@ def load_new_price(connect, now_day, insert_mode):
    results = []
    for row in rows:
       color_sym = u''
+      color_price = -1
       if insert_mode > 0: # получение текущей цены с сайта
          price = load_link(connect, now_day, row[1], 0)
          if price != 0 :
-            if price < int(row[3]): color_sym = u'\033[1;35m'
-            elif price == int(row[3]): color_sym = u'\033[1;36m'
+            if price < int(row[3]): 
+               if win32 == -1:
+                  color_sym = u'\033[1;35m'
+               else:
+                  color_price = FG_RED|FG_INTENSITY|BG_BLACK
+            elif price == int(row[3]):
+               if win32 == -1:
+                  color_sym = u'\033[1;36m'
+               else:
+                  color_price = FG_CYAN|FG_INTENSITY|BG_BLACK
       else: price = 0
-         # сокращенное название сайта с подцветкой
-      if row[1].find(u'ozon.ru') > -1:
-         site = u'\033[1;46mozon.ru\033[0m'
-      elif row[1].find(U'read.ru') > -1: 
-         site = u'\033[1;43mread.ru\033[0m'
-      elif row[1].find(U'my-shop.ru') > -1: 
-         site = u'\033[1;47mmy-shop\033[0m'
-      elif row[1].find(U'ukazka.ru') > -1: 
-         site = u'\033[1;44mukazka \033[0m'
+         # сокращенное название сайта с подсветкой
+      if win32 == -1:
+         if row[1].find(u'ozon.ru') > -1:
+            site = u'\033[1;46mozon.ru\033[0m: '
+         elif row[1].find(U'read.ru') > -1:
+            site = u'\033[1;43mread.ru\033[0m: '
+         elif row[1].find(U'my-shop.ru') > -1: 
+            site = u'\033[1;47mmy-shop\033[0m: '
+         elif row[1].find(U'ukazka.ru') > -1: 
+            site = u'\033[1;44mukazka \033[0m: '
+         else:
+            site = u'none'
+         sys.stdout.write(site)
+         close_color = u'\033[0m'
       else:
-         site = u'none'
-      print site + u': ' + row[2] + u';',\
-            color_sym + u'сейчас: ' + unicode(str(price)) + u'\033[0m,',\
-            u'минимум: ' + unicode(str(row[3])) + u',',\
-            u'максимум: ' + unicode(str(row[4])) + u'; ' + row[1]
+         if row[1].find(u'ozon.ru') > -1:
+            site = u'ozon.ru'
+            colornum = FG_GREY|FG_INTENSITY|BG_CYAN|BG_INTENSITY
+         elif row[1].find(U'read.ru') > -1:
+            site = u'read.ru'
+            colornum = FG_GREY|FG_INTENSITY|BG_YELLOW
+         elif row[1].find(U'my-shop.ru') > -1: 
+            site = u'my-shop'
+            colornum = FG_BLACK|BG_GREY|BG_INTENSITY
+         elif row[1].find(U'ukazka.ru') > -1: 
+            site = u'ukazka '
+            colornum = FG_GREY|BG_BLUE|BG_INTENSITY
+         else:
+            site = u'none'
+         console_color(colornum)
+         sys.stdout.write(site+u': ')
+         console_color(FG_GREY|BG_BLACK)
+         color_sym = close_color = u''
+      sys.stdout.write(row[2] + u';' + color_sym)
+      if win32 > -1 and color_price > 0:
+         console_color(color_price)
+      sys.stdout.write(u' сейчас: ' + unicode(str(price)) + close_color )
+      if win32 > -1 and color_price > 0:
+         console_color(FG_GREY|BG_BLACK)
+      print(u', минимум: ' + unicode(str(row[3])) + \
+            u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
       if insert_mode == 1:
          if price != 0: 
             results.insert(0, (now_day, row[0], price) )
