@@ -17,7 +17,11 @@ try:
    handle = windll.kernel32.GetStdHandle(-11)
 except:
    pass
+# признак запуска на windows-python
 win32 = sys.platform.find(u'win')
+# cygwin-python за window не считать!
+if sys.platform.find(u'cygwin') > -1:
+   win32 = -1
 # номера цветов текста
 FG_BLACK     = 0x0000
 FG_BLUE      = 0x0001
