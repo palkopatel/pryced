@@ -11,9 +11,12 @@ import datetime # для datetime.datetime.now()
 import sqlite3
 import sys
 import urllib2
-from ctypes import windll
 
-handle = windll.kernel32.GetStdHandle(-11)
+try:
+   from ctypes import windll
+   handle = windll.kernel32.GetStdHandle(-11)
+except:
+   pass
 win32 = sys.platform.find(u'win')
 # номера цветов текста
 FG_BLACK     = 0x0000
@@ -233,14 +236,19 @@ def load_new_price(connect, now_day, insert_mode):
          sys.stdout.write(site+u': ')
          console_color(FG_GREY|BG_BLACK)
          color_sym = close_color = u''
-      sys.stdout.write(row[2] + u';' + color_sym)
-      if win32 > -1 and color_price > 0:
-         console_color(color_price)
-      sys.stdout.write(u' сейчас: ' + unicode(str(price)) + close_color )
-      if win32 > -1 and color_price > 0:
+      if win32 == -1:
+         print(row[2] + u';' + color_sym + \
+               u' сейчас: ' + unicode(str(price)) + close_color + \
+               u', минимум: ' + unicode(str(row[3])) + \
+               u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
+      else:
+         sys.stdout.write(row[2] + u';' + color_sym)
+         if color_price > 0:
+            console_color(color_price)
+         sys.stdout.write(u' сейчас: ' + unicode(str(price)) + close_color )
          console_color(FG_GREY|BG_BLACK)
-      print(u', минимум: ' + unicode(str(row[3])) + \
-            u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
+         print(u', минимум: ' + unicode(str(row[3])) + \
+               u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
       if insert_mode == 1:
          if price != 0: 
             results.insert(0, (now_day, row[0], price) )
