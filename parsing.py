@@ -123,14 +123,6 @@ def myshop_parse_book(soup, create_flag):
    
    """
    if create_flag > 0:
-      # найти первую форму с атрибутом name равным form1,
-      # разбить на отдельные ячейки и извлечь из 0-й ячейки тег h1
-      try:
-         form = soup.find('form', attrs={'name':'form1'})
-         td = form.findAll('td')
-         title = td[0].find('h1').string
-      except:
-         title = ''
       # извлечь теги 'td' без атрибутов, в каждом найти контекст со словом 'Серия'
       try:
          serial = ''
@@ -147,25 +139,24 @@ def myshop_parse_book(soup, create_flag):
                   pass
       except:
          serial = ''
-      # извлечь теги span, найти среди них содержащий слово 'Автор'
-      # и получить в нем имя автора из тега 'a'
-      author = ''
+      
+      try:
+         title_tag = soup.find('title').string.split(' | ')
+         book_name = title_tag[0].split(' - ')
+         title = book_name[0]
+         author = book_name[1]
+      except:
+         author = ''
+         title = ''
+         
+      # извлечь теги span, найти среди них содержащий слово 'ISBN'
       isbn = ''
       span = soup.findAll('span', attrs={'class':'small1'})
       for span_row in span:
          # случай явного указания автора
          if len(span_row.contents) == 1:
-            if span_row.string.find(U'Автор') > -1:
-               author = span_row.string.split(': ')[1]
-            elif span_row.string.find(U'ISBN') > -1:
+            if span_row.string.find(U'ISBN') > -1:
                isbn = span_row.string.split(': ')[1]
-         # случай, когда автор указан ссылкой
-         elif len(span_row.contents) > 1:
-            try:
-               if span_row.contents[0].find(U'Автор') > -1:
-                  author = span_row.find('a').string
-            except:
-               pass
    else:
       title = ''
       author = ''

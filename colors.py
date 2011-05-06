@@ -2,7 +2,10 @@
 # -*- coding: utf-8
 
 import sys
-from ctypes import windll
+try:
+    from ctypes import windll
+except:
+    pass
 
 # номера цветов текста
 FG_BLACK     = 0x0000
@@ -24,7 +27,12 @@ BG_MAGENTA   = 0x0050
 BG_YELLOW    = 0x0060
 BG_GREY      = 0x0070
 BG_INTENSITY = 0x0080 # жирность фона
-handle = windll.kernel32.GetStdHandle(-11)
+
+try:
+    handle = windll.kernel32.GetStdHandle(-11)
+except:
+    pass
+
 def console_color(color):
    windll.kernel32.SetConsoleTextAttribute(handle, color)
 
