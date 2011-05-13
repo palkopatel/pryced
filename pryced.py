@@ -291,26 +291,26 @@ def usage_message():
          u'\n\t-s - получить цены, не сохраняя их в базу'
    print msg
 
-try:
-       # значение даты для вставки в базу
-   now_day = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-   connect = connect_to_base()
-   if len(sys.argv) > 2:
-      if sys.argv[1] == '-a': # добавление ссылки на книгу в базу
-         add_new_book(connect, now_day, sys.argv[2])
-      elif sys.argv[1] == '-t': # проба ссылки
-         test_url(sys.argv[2])
-   elif len(sys.argv) > 1 and (sys.argv[1] == '-g' or sys.argv[1] == '-s'): # добавление текущих цен в базу
-      try:
-         if sys.argv[1] == '-g': insert_mode = 1
-         else: insert_mode = 0
-         load_new_price(connect, now_day, insert_mode)
-      except sqlite3.Error, e:
-         print u'Ошибка при выполнении:', e.args[0]
-   else:
+if __name__ == "__main__":
+   try:
+          # значение даты для вставки в базу
+      now_day = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+      connect = connect_to_base()
+      if len(sys.argv) > 2:
+         if sys.argv[1] == '-a': # добавление ссылки на книгу в базу
+            add_new_book(connect, now_day, sys.argv[2])
+         elif sys.argv[1] == '-t': # проба ссылки
+            test_url(sys.argv[2])
+      elif len(sys.argv) > 1 and (sys.argv[1] == '-g' or sys.argv[1] == '-s'): # добавление текущих цен в базу
+         try:
+            if sys.argv[1] == '-g': insert_mode = 1
+            else: insert_mode = 0
+            load_new_price(connect, now_day, insert_mode)
+         except sqlite3.Error, e:
+            print u'Ошибка при выполнении:', e.args[0]
+      else:
+         usage_message()
+      connect.close()
+   except Exception, e:
       usage_message()
-   connect.close()
-except Exception, e:
-   usage_message()
-   print e
-
+      print e
