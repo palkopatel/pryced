@@ -130,5 +130,9 @@ class App(object):
       gtk.main_quit()
 
 if __name__ == "__main__":
+    # признак запуска на windows-python
+    if sys.platform.find(u'win') > -1:
+       sys.stdout = open('gpryced_stdout.log', 'w')
+       sys.stderr = open('gpryced_stderr.log', 'w')
     app = App()
     gtk.main()
