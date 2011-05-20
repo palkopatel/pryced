@@ -5,8 +5,12 @@
 # скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
 # ukazka.ru
 
-from parsing import *
-from BeautifulSoup import BeautifulSoup
+try:
+   from parsing import *
+   from BeautifulSoup import BeautifulSoup
+except:
+   print u'Для работы нужна библиотека BeautifulSoup\n(Можно найти на сайте: http://code.google.com/p/pryced/downloads/list)\n'
+   exit()
 import datetime # для datetime.datetime.now()
 import sqlite3
 import sys
