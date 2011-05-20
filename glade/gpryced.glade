@@ -33,7 +33,7 @@
     <property name="window_position">center</property>
     <property name="default_width">800</property>
     <property name="default_height">800</property>
-    <property name="opacity">0.5</property>
+    <property name="opacity">1.0</property>
     <child>
       <object class="GtkVBox" id="box1">
         <property name="visible">True</property>

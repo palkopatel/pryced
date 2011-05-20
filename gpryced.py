@@ -5,7 +5,7 @@ try:
     import sys, pygtk
     pygtk.require('2.0')
 except:
-    print 'Не удалось импортировать модуль PyGTK'
+    print u'Не удалось импортировать модуль PyGTK'
     sys.exit(1)
 
 import gtk
