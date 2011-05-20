@@ -9,9 +9,10 @@ except:
     sys.exit(1)
 
 import gtk
-import gtk.glade
 import datetime # для datetime.datetime.now()
 from pryced import *
+# эти библиотеки включены для сборки в exe'шника в windows
+import cairo, gio, pango, atk, pangocairo
 
 class App(object):
    def __init__libglade(self):
