@@ -15,6 +15,28 @@ from pryced import *
 import cairo, gio, pango, atk, pangocairo
 
 class App(object):
+   
+   def onRowActivated(widget, cell, point, render_cell):
+      if len(point) == 2:
+         try:
+            cell.set_text(widget.model.get_value(widget.model.get_iter(point), 0))
+         except:
+            print 'Сбой в таблице!'
+   
+   def onCheckButton(widget, event, data=None):
+      url_name = event.get_text()
+      (title, author, serial, isbn, desc2, price) = test_url(url_name)
+      widget.builder.get_object("tfTitle").set_text(title)
+      widget.builder.get_object("tfAuthor").set_text(author)
+      widget.builder.get_object("tfSerial").set_text(serial)
+      widget.builder.get_object("tfISBN").set_text(isbn)
+      widget.builder.get_object("tfDesc2").set_text(desc2)
+      widget.builder.get_object("tfPrice").set_text(price)
+      widget.test_dlg.show_all()
+
+   def onCloseDlg(widget, event, data=None):
+      widget.test_dlg.hide_all()
+
    def __init__libglade(self):
       # Загружаем файл интерфейса
       self.gladefile = "glade/gpryced.glade"
@@ -28,7 +50,7 @@ class App(object):
       # Магическая команда, соединяющая сигналы с обработчиками
 #      self.widgetsTree.signal_autoconnect(dic)
       # Соединяем событие закрытия окна с функцией завершения приложения
-      self.window = self.widgetsTree.get_widget("window1")
+      self.window = self.widgetsTree.get_widget("main_window")
       if (self.window):
          self.window.connect("destroy", self.close_app)
       # А это уже логика приложения. Задём маршруты обработки текста для каждой кнопки.
@@ -43,8 +65,10 @@ class App(object):
       # присоединяем сигналы
       self.builder.connect_signals(self)
 
-      self.main_window = self.builder.get_object("window1")
+      self.main_window = self.builder.get_object("main_window")
       self.main_window.connect("destroy", self.close_app)
+
+      self.test_dlg = self.builder.get_object("test_link_dialog")
 
       self.treeview = self.builder.get_object("treeview1")
       self.model = self.builder.get_object("treestore1")

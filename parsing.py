@@ -53,7 +53,10 @@ def ozonru_parse_book(soup, create_flag):
       isbn = ''
       desc2 = ''
    
-   price = soup.find('big').string
+   try:
+      price = soup.find('span', attrs={'class':'saleblock_price'}).string
+   except:
+      price = '0'
    if price == None: price = '0'
 
    return (title, author, serial, isbn, desc2, price)
@@ -227,4 +230,4 @@ def test_url(url_name):
    print u'isbn:   ' + isbn
    print u'price:  ' + price
    print u'desc2:  ' + desc2
-
+   return (title, author, serial, isbn, desc2, price)
