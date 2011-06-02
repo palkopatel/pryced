@@ -16,6 +16,34 @@ import cairo, gio, pango, atk, pangocairo
 
 class App(object):
    
+   def onCut(widget, event):
+      model, widget.iter_src = event.get_selected()
+      widget.builder.get_object("toolbuttonPaste").set_sensitive(1)
+      
+   def onPaste(widget, event):
+         # копировать нечего
+         if widget.iter_src == None:
+            return
+         model, iter_dest = event.get_selected()
+         #  только  нужное место
+         if len(model.get_path(iter_dest)) != 1:
+            return
+         # не вставлять в сво же родителя
+         if model.iter_parent(widget.iter_src) != iter_dest :
+            try:
+               book_id = model[iter_dest][4]
+               link_id = model[widget.iter_src][12]
+               cursor = widget.connect.cursor()
+               cursor.execute( 'update links set book=? where id=?', (book_id, link_id) )
+               cursor.close()
+               widget.connect.commit()
+               model.append(iter_dest, model[model.get_path(widget.iter_src)])
+               model.remove(widget.iter_src)
+               widget.iter_src = None
+               widget.builder.get_object("toolbuttonPaste").set_sensitive(0)
+            except sqlite3.Error, e:
+               print u'Ошибка при выполнении запроса:', e.args[0]
+      
    def onRowActivated(widget, cell, point, render_cell):
       if len(point) == 2:
          try:
@@ -26,16 +54,21 @@ class App(object):
    def onCheckButton(widget, event, data=None):
       url_name = event.get_text()
       (title, author, serial, isbn, desc2, price) = test_url(url_name)
+      if widget.test_dlg == None:
+         widget.test_dlg = widget.builder.get_object("test_link_dialog")
       widget.builder.get_object("tfTitle").set_text(title)
       widget.builder.get_object("tfAuthor").set_text(author)
       widget.builder.get_object("tfSerial").set_text(serial)
       widget.builder.get_object("tfISBN").set_text(isbn)
       widget.builder.get_object("tfDesc2").set_text(desc2)
       widget.builder.get_object("tfPrice").set_text(price)
-      widget.test_dlg.show_all()
+      widget.test_dlg.show()
 
    def onCloseDlg(widget, event, data=None):
-      widget.test_dlg.hide_all()
+#      widget.test_dlg.hide_all()
+      widget.test_dlg.hide()
+      if isinstance(event, gtk.Dialog):
+         widget.test_dlg = None
 
    def __init__libglade(self):
       # Загружаем файл интерфейса
@@ -67,15 +100,20 @@ class App(object):
 
       self.main_window = self.builder.get_object("main_window")
       self.main_window.connect("destroy", self.close_app)
+      
+      self.builder.get_object("toolbuttonPaste").set_sensitive(0)
+      self.iter_src = None
 
       self.test_dlg = self.builder.get_object("test_link_dialog")
-
+      self.test_dlg.set_deletable(0)
+#      self.test_dlg.connect("destroy", self.onCloseDlg)
+   
       self.treeview = self.builder.get_object("treeview1")
       self.model = self.builder.get_object("treestore1")
 
       now_day = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-      connect = connect_to_base()
-      cursor = connect.cursor()
+      self.connect = connect_to_base()
+      cursor = self.connect.cursor()
       # перебор книг в базе
       cursor.execute('select pr.*, prices.price, \
                         strftime("%Y-%m-%d", pr.ptime) shorttime, \
@@ -105,7 +143,7 @@ class App(object):
       pix_readru = gtk.gdk.pixbuf_new_from_file('pics/readru-16.png')
       pix_myshop = gtk.gdk.pixbuf_new_from_file('pics/myshop-16.png')
       pix_ukazka = gtk.gdk.pixbuf_new_from_file('pics/ukazka-16.png')
-      cursor_link = connect.cursor()
+      cursor_link = self.connect.cursor()
       for row in rows:
          url_name = row[3]
          if url_name.find(u'ozon.ru') > -1:
@@ -129,7 +167,7 @@ class App(object):
          else:
             fg_timestamp = None
          if books_id != row[0] :
-            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent])
+            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7]])
             books_id = row[0]
          else:
             imin, imax, iprice, iseconds = self.model.get(iter, 1, 2, 3, 8)
@@ -143,7 +181,7 @@ class App(object):
                self.model.set(iter, 5, 'gtk-go-down')
             else: 
                self.model.set(iter, 5, '')
-         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent])
+         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent,row[1], row[7]])
          if fg_pricecurrent != None: self.model.set(iter, 10, fg_pricecurrent)
 
       # отображает данные, хранящиеся в list_store1

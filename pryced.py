@@ -184,14 +184,15 @@ def load_new_price(connect, now_day, insert_mode):
    """
    cursor = connect.cursor()
       # перебор книг в базе
-   cursor.execute('select links.id, links.urlname, links.author || ", " || links.title \
+   cursor.execute('select links.id, links.urlname, books.author || ", " || books.title \
                         , ifnull(min(prices.price),0)\
                         , ifnull(max(prices.price),0)\
-                        , links.author, links.title\
+                        , books.author, books.title\
                    from links \
                    left join prices on links.id = prices.link \
+                   left join books on links.book = books.id \
                    group by links.id, links.author, links.title \
-                   order by links.author, links.title, links.urlname')
+                   order by books.author, books.title, links.urlname')
    rows = cursor.fetchall()
    results = []
    for row in rows:

@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
+  <object class="GtkAction" id="actionCut">
+    <property name="stock_id">gtk-cut</property>
+    <signal name="activate" handler="onCut" object="treeview-selection" swapped="no"/>
+  </object>
+  <object class="GtkAction" id="actionPaste">
+    <property name="stock_id">gtk-paste</property>
+    <signal name="activate" handler="onPaste" object="treeview-selection" swapped="no"/>
+  </object>
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Монитор книг</property>
@@ -16,14 +24,27 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkToolButton" id="toolbutton1">
+              <object class="GtkToolButton" id="toolbuttonCut">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Загрузить текущие цены из сети</property>
+                <property name="related_action">actionCut</property>
                 <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">toolbutton1</property>
+                <property name="stock_id">gtk-cut</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbuttonPaste">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="related_action">actionPaste</property>
+                <property name="use_action_appearance">False</property>
                 <property name="use_underline">True</property>
-                <property name="icon_name">emblem-downloads</property>
+                <property name="stock_id">gtk-paste</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -131,6 +152,18 @@
                           <attributes>
                             <attribute name="foreground-gdk">9</attribute>
                             <attribute name="text">7</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="isbn">
+                        <property name="resizable">True</property>
+                        <property name="title" translatable="yes">ISBN</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cellrenderertext1"/>
+                          <attributes>
+                            <attribute name="text">11</attribute>
                           </attributes>
                         </child>
                       </object>
@@ -394,7 +427,6 @@
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Проба ссылки</property>
-    <property name="resizable">False</property>
     <property name="window_position">center-on-parent</property>
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
@@ -402,6 +434,8 @@
     <property name="skip_pager_hint">True</property>
     <property name="transient_for">main_window</property>
     <property name="has_resize_grip">False</property>
+    <signal name="close" handler="onCloseDlg" swapped="no"/>
+    <signal name="destroy" handler="onCloseDlg" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox1">
         <property name="can_focus">False</property>
@@ -710,6 +744,10 @@
       <column type="GdkColor"/>
       <!-- column-name fg_pricecurrent -->
       <column type="GdkColor"/>
+      <!-- column-name isbn -->
+      <column type="gchararray"/>
+      <!-- column-name link_id -->
+      <column type="glong"/>
     </columns>
   </object>
 </interface>
