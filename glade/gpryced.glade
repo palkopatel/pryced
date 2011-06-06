@@ -29,7 +29,7 @@
                 <property name="can_focus">False</property>
                 <property name="related_action">actionCut</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="label" translatable="yes">Вырезать</property>
                 <property name="stock_id">gtk-cut</property>
               </object>
               <packing>
@@ -43,6 +43,7 @@
                 <property name="can_focus">False</property>
                 <property name="related_action">actionPaste</property>
                 <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Вставить</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-paste</property>
               </object>
