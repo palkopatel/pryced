@@ -79,6 +79,10 @@ def readru_parse_book(soup, create_flag):
             elif cell.string.find(U'Серия') > -1: # найти ячейку с названием серии
                serial = row.find('a').string
             elif cell.string.find(U'ISBN') > -1: # найти ячейку с ISBN
+               # старый способ извлечение ISBN, который перестал работать 01-03-2011
+               # примерно с середины июня 2011 этот способ снова работает
+               isbn = row.contents[3].string.replace("\t", "").replace("\n", "").replace("\r", "")
+               continue
                # ISBN спрятали в картинке. надо ее загрузить и распознать
                # 1) сначала получить ссылку
                piclink = row.contents[3].find('img')['src']
@@ -108,8 +112,6 @@ def readru_parse_book(soup, create_flag):
                output = p2.communicate()[0]
                # срезать в выводе "лишние" символы
                isbn = output.replace(" ", "").replace("\n", "")
-               # старый способ извлечение ISBN, который перестал работать 01-03-2011
-               #isbn = row.contents[3].string.replace("\t", "").replace("\n", "").replace("\r", "")
          else:
             continue
          break
