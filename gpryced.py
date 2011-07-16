@@ -14,6 +14,12 @@ from pryced import *
 # эти библиотеки включены для сборки в exe'шника в windows
 import cairo, gio, pango, atk, pangocairo
 
+from numpy import arange
+import matplotlib.pyplot as plt
+import matplotlib.dates
+from matplotlib.backends.backend_gtk import FigureCanvasGTK
+import time
+
 class App(object):
    
    def onCut(widget, event):
@@ -45,12 +51,63 @@ class App(object):
                print u'Ошибка при выполнении запроса:', e.args[0]
       
    def onRowActivated(widget, cell, point, render_cell):
+      # узел дерева второго уровня вложенности - ссылка на книгу
       if len(point) == 2:
          try:
             cell.set_text(widget.model.get_value(widget.model.get_iter(point), 0))
          except:
             print 'Сбой в таблице!'
-   
+      elif len(point) == 1:
+         book_id = widget.model.get_value(widget.model.get_iter(point), 4)
+         print 'book id = ', book_id
+         try: 
+            for ax in widget.figure.axes:
+               widget.figure.delaxes(ax)
+         except:
+            widget.figure = plt.figure()
+            widget.figure.autofmt_xdate()
+            widget.canvas = FigureCanvasGTK(widget.figure) # a gtk.DrawingArea   
+            widget.canvas.set_size_request(800, 600)
+            #widget.canvas.mpl_connect('motion_notify_event', widget.on_drawarea)
+            widget.canvas.show()   
+            widget.graph_dlg = widget.builder.get_object("book_dialog")
+            widget.graphview = widget.builder.get_object("dialog-vbox2")
+            widget.graphview.pack_start(widget.canvas, True, True)  
+
+         cursor = widget.connect.cursor()
+         links = cursor.execute('select links.id, links.urlname \
+            from links \
+            join books on books.id=links.book\
+            where books.id=?', [book_id] )
+         ids = []
+         for link in links:
+            ids.append([link[0], link[1]])
+
+         cursor = widget.connect.cursor()
+         query = 'select price, timestamp \
+                  from prices where link = ? \
+                  order by timestamp desc'
+         for link in ids:
+            rows = cursor.execute( query, [link[0]] )
+            rows = cursor.fetchall()
+            x = []
+            y = []
+            for row in rows:
+               timestamp = row[1]
+               timestamp1 = datetime.datetime(*time.strptime(row[1], "%Y-%m-%d %H:%M:%S")[0:5])
+               timestamp = matplotlib.dates.date2num(timestamp1)
+               x.append(timestamp1)
+               y.append(row[0])
+            plt.plot(x, y, label=link[1])
+         plt.legend()
+         plt.grid(True)
+         plt.xlabel('Дата')
+         plt.ylabel('Цена')
+         #plt.show()
+         widget.graph_dlg.show_all()
+         widget.graph_dlg.run()
+         widget.graph_dlg.hide_all()
+
    def onCheckButton(widget, event, data=None):
       url_name = event.get_text()
       (title, author, serial, isbn, desc2, price) = test_url(url_name)
@@ -62,13 +119,9 @@ class App(object):
       widget.builder.get_object("tfISBN").set_text(isbn)
       widget.builder.get_object("tfDesc2").set_text(desc2)
       widget.builder.get_object("tfPrice").set_text(price)
-      widget.test_dlg.show()
-
-   def onCloseDlg(widget, event, data=None):
-#      widget.test_dlg.hide_all()
-      widget.test_dlg.hide()
-      if isinstance(event, gtk.Dialog):
-         widget.test_dlg = None
+      widget.test_dlg.show_all()
+      widget.test_dlg.run()
+      widget.test_dlg.hide_all()
 
    def __init__libglade(self):
       # Загружаем файл интерфейса
@@ -105,8 +158,7 @@ class App(object):
       self.iter_src = None
 
       self.test_dlg = self.builder.get_object("test_link_dialog")
-      self.test_dlg.set_deletable(0)
-#      self.test_dlg.connect("destroy", self.onCloseDlg)
+#      self.test_dlg.set_deletable(0)
    
       self.treeview = self.builder.get_object("treeview1")
       self.model = self.builder.get_object("treestore1")
@@ -190,7 +242,7 @@ class App(object):
 
    def close_app(self, widget):
       gtk.main_quit()
-
+      
 if __name__ == "__main__":
     # признак запуска на windows-python
     if sys.platform.find(u'win') > -1:
