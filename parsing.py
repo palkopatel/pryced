@@ -210,6 +210,41 @@ def ukazka_parse_book(soup, create_flag):
    price = soup.find('span', attrs={'class':'price'}).string.split('&nbsp;')[0]
    return (title, author, serial, isbn, '', price)
 
+def bolero_parse_book(soup, create_flag):
+   """ разбор страницы с bolero.ru
+   
+   """
+   serial = ''
+   if create_flag > 0:
+      title_tag = soup.find('title').string.split('-')
+      title = title_tag[0].strip()
+      author = title_tag[1].strip()
+      done = 0
+      for table in soup.findAll('table'):
+         for row in table.findAll('tr'):
+            for cell in row.findAll('td'):
+               try:
+                  if cell.string.find(U'ISBN') > -1:
+                     isbn = row.find('b').string
+                     done += 1
+                     break
+                  if cell.string.find(U'Серия') > -1:
+                     serial = row.find('a').string
+                     done += 1
+                     break
+               except:
+                  pass
+            if done >= 2 :
+               break
+         if done >= 2:
+            break
+   else:
+      title = ''
+      author = ''
+      isbn = ''
+   price = soup.find('div', attrs={'class':'price'}).contents[0].string.split('&nbsp;')[0]
+   return (title, author, serial, isbn, '', price)
+
 def test_url(url_name):
    """ функция для тестирования (запуск с аргументом -t <ссылка>)
    
@@ -224,8 +259,10 @@ def test_url(url_name):
       (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
    elif url_name.find(u'my-shop.ru') > -1: 
       (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
-   elif url_name.find(u'ukazka') > -1: 
+   elif url_name.find(u'ukazka.ru') > -1: 
       (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
+   elif url_name.find(u'bolero.ru') > -1: 
+      (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
    print u'title:  ' + title
    print u'author: ' + author
    print u'serial: ' + serial

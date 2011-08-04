@@ -195,6 +195,7 @@ class App(object):
       pix_readru = gtk.gdk.pixbuf_new_from_file('pics/readru-16.png')
       pix_myshop = gtk.gdk.pixbuf_new_from_file('pics/myshop-16.png')
       pix_ukazka = gtk.gdk.pixbuf_new_from_file('pics/ukazka-16.png')
+      pix_bolero = gtk.gdk.pixbuf_new_from_file('pics/bolero-16.png')
       cursor_link = self.connect.cursor()
       for row in rows:
          url_name = row[3]
@@ -206,6 +207,8 @@ class App(object):
             pix = pix_myshop
          elif url_name.find(u'ukazka.ru') > -1:
             pix = pix_ukazka
+         elif url_name.find(u'bolero.ru') > -1:
+            pix = pix_bolero
          else:
             pix = None
          if row[8]==row[4]:
