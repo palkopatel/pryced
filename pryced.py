@@ -132,36 +132,47 @@ def load_link(connect, now_day, url_name, create_flag):
             print u'Ссылка на "' + data[0][0] + u'. ' + data[0][1] + \
                   u'" уже существует в базе!'
             return 0;
-      f = urllib2.urlopen(url_name) 
-      datas = f.read()
-      f.close()
-      soup = BeautifulSoup(datas)
       if url_name.find(u'ozon.ru') > -1:
-         (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, create_flag)
-      elif url_name.find(u'read.ru') > -1: 
-         (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
-      elif url_name.find(u'my-shop.ru') > -1: 
-         (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
-      elif url_name.find(u'ukazka.ru') > -1: 
-         (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
-      elif url_name.find(u'bolero.ru') > -1: 
-         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
+         (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, create_flag)
       else:
-         return 0
+         f = urllib2.urlopen(url_name) 
+         datas = f.read()
+         f.close()
+         soup = BeautifulSoup(datas)
+         if url_name.find(u'read.ru') > -1: 
+            (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
+         elif url_name.find(u'my-shop.ru') > -1: 
+            (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
+         elif url_name.find(u'ukazka.ru') > -1: 
+            (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
+         elif url_name.find(u'bolero.ru') > -1: 
+            (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
+         else:
+            return 0
       if create_flag > 0:
-         try:
-            book_id = insert_new_book(connect, isbn, title, author)
-            cursor = connect.cursor()
-            cursor.execute( 'insert into links \
-               (book, urlname, title, author, serial) \
-               values (?, ?, ?, ?, ?)', \
-               (book_id, url_name, title, author, serial) )
-            cursor.close()
-            connect.commit()
-            print u'Ссылка на "' + author + u'. ' + \
-               title + u'" добавлена в базу.'
-         except sqlite3.Error, e:
-            print u'Ошибка при выполнении запроса:', e.args[0]
+         # в desc2 возвращается в случае фатальной ошибки загрузки
+         if desc2 != None:
+            try:
+               book_id = insert_new_book(connect, isbn, title, author)
+               cursor = connect.cursor()
+               cursor.execute( 'insert into links \
+                  (book, urlname, title, author, serial) \
+                  values (?, ?, ?, ?, ?)', \
+                  (book_id, url_name, title, author, serial) )
+               cursor.close()
+               connect.commit()
+               print u'Ссылка на "' + author + u'. ' + \
+                  title + u'" добавлена в базу.'
+            except sqlite3.Error, e:
+               print u'Ошибка при выполнении запроса:', e.args[0]
+         else:
+               print u'Ошибка при извлечения данных о книге:' 
+               print u'title:  ' + title
+               print u'author: ' + author
+               print u'serial: ' + serial
+               print u'isbn:   ' + isbn
+               print u'price:  ' + price
+               print u'desc2:  ' + desc2
       return int(float(price.replace(',', '.')))
    except Exception, e:
       print e

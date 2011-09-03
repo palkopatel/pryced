@@ -25,40 +25,46 @@ def convert_author_string(author_raw):
       pass
    return author
 
-def ozonru_parse_book(soup, create_flag):
+def ozonru_parse_book(url_name, create_flag):
    """ разбор страницы с ozon.ru
    
    """
-   if create_flag > 0:
-      fields = soup.find('title').string.split(' | ')
-      desc2 = fields[0]
-      title = fields[1]
-      author_raw = fields[2]
-      author = convert_author_string(author_raw)
-      try:
-         serial = fields[3] 
-      except:
-         serial = ''
-      
-      # поиск ISBN в теге div
-      isbn = ''
-      for div_row in soup.find('div', attrs={'class':'detail_p small'}):
-         if div_row.string != None and len(div_row.string) > 4:
-            if div_row.string.find(U'ISBN') != -1:
-               isbn = div_row.string.split('&nbsp;')[3]
-   else:
-      title = ''
-      author = ''
-      serial = ''
-      isbn = ''
-      desc2 = ''
+   title = ''
+   author = ''
+   isbn = ''
+   serial = ''
+   desc2 = ''
    
+   list0=url_name.split('/')
+   if( list0[len(list0)-1] == ''): id=list0[len(list0)-2]
+   else: id=list0[len(list0)-1]
+
+   if create_flag > 0:
+      url_name='http://www.ozon.ru/webservices/OzonWebSvc.asmx/ItemDetail?ID='+id
+      f = urllib2.urlopen(url_name) 
+      datas = f.read()
+      f.close()
+      soup = BeautifulSoup(datas)
+      try:
+         title = soup.find('name').string
+         author = soup.find('author').string
+         isbn = soup.find('isbn').string
+      except:
+         desc2 = None
+
+   url_name='http://www.ozon.ru/webservices/OzonWebSvc.asmx/ItemInfo?ID='+id
+   f = urllib2.urlopen(url_name) 
+   datas = f.read()
+   f.close()
+   soup = BeautifulSoup(datas)
    try:
-      price = soup.find('span', attrs={'class':'saleblock_price'}).string
+      price = soup.find('price').string.split('.')[0]
+      availability = soup.find('availability').string
+      # не нашел признака отсутствия книги кроме этого тектового поля
+      if availability.find(U'Товар отсутствует') != -1:
+         price = '0'
    except:
       price = '0'
-   if price == None: price = '0'
-
    return (title, author, serial, isbn, desc2, price)
 
 def readru_parse_book(soup, create_flag):
@@ -207,7 +213,10 @@ def ukazka_parse_book(soup, create_flag):
       author = ''
       serial = ''
       isbn = ''
-   price = soup.find('span', attrs={'class':'price'}).string.split('&nbsp;')[0]
+   try:
+      price = soup.find('span', attrs={'class':'price'}).string.split('&nbsp;')[0]
+   except:
+      price = '0'
    return (title, author, serial, isbn, '', price)
 
 def bolero_parse_book(soup, create_flag):
@@ -249,24 +258,27 @@ def test_url(url_name):
    """ функция для тестирования (запуск с аргументом -t <ссылка>)
    
    """
-   f = urllib2.urlopen(url_name)
-   datas = f.read()
-   f.close()
-   soup = BeautifulSoup(datas)
    if url_name.find(u'ozon.ru') > -1:
-      (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, 1)
-   elif url_name.find(u'read.ru') > -1: 
-      (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
-   elif url_name.find(u'my-shop.ru') > -1: 
-      (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
-   elif url_name.find(u'ukazka.ru') > -1: 
-      (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
-   elif url_name.find(u'bolero.ru') > -1: 
-      (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
+      (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, 1)
+   else:
+      f = urllib2.urlopen(url_name)
+      datas = f.read()
+      f.close()
+      soup = BeautifulSoup(datas)
+      if url_name.find(u'read.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
+      elif url_name.find(u'my-shop.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
+      elif url_name.find(u'ukazka.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
+      elif url_name.find(u'bolero.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
    print u'title:  ' + title
    print u'author: ' + author
    print u'serial: ' + serial
    print u'isbn:   ' + isbn
    print u'price:  ' + price
+   if desc2 == None:
+      desc2 = u'ОШИБКА РАЗБОРА!!!'
    print u'desc2:  ' + desc2
    return (title, author, serial, isbn, desc2, price)
