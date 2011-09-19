@@ -21,11 +21,11 @@ from matplotlib.backends.backend_gtk import FigureCanvasGTK
 import time
 
 class App(object):
-   
+
    def onCut(widget, event):
       model, widget.iter_src = event.get_selected()
       widget.builder.get_object("toolbuttonPaste").set_sensitive(1)
-      
+
    def onPaste(widget, event):
          # копировать нечего
          if widget.iter_src == None:
@@ -49,30 +49,74 @@ class App(object):
                widget.builder.get_object("toolbuttonPaste").set_sensitive(0)
             except sqlite3.Error, e:
                print u'Ошибка при выполнении запроса:', e.args[0]
+
+   def onEditBook(widget, event):
+      model, widget.iter_src = event.get_selected()
+
+      if widget.book_dlg == None:
+          widget.builder.add_from_file("glade/book_edit_dialog.glade")
+          widget.book_dlg = widget.builder.get_object("book_edit_dialog")
+          widget.builder.connect_signals(widget)
+
+      book_id = model[widget.iter_src][4]
+      widget.builder.get_object("tfBookId").set_text(str(book_id))
+      cursor = widget.connect.cursor()
+      cursor.execute('select books.isbn, \
+                        books.author, books.title \
+                     from books \
+                     where books.id =?', [book_id])
+      rows = cursor.fetchall()
+      # на самом деле тут одна запись
+      for row in rows:
+          widget.builder.get_object("tfISBN").set_text(row[0])
+          widget.builder.get_object("tfAuthor").set_text(row[1])
+          widget.builder.get_object("tfTitle").set_text(row[2])
+          break
+      widget.book_dlg.show_all()
+      widget.book_dlg.run()
+      widget.book_dlg.hide_all()
       
+   def onEditSave(widget, event):
+       try:
+           isbn = unicode(widget.builder.get_object("tfISBN").get_text())
+           author = unicode(widget.builder.get_object("tfAuthor").get_text())
+           title = unicode(widget.builder.get_object("tfTitle").get_text())
+           book_id = int(widget.builder.get_object("tfBookId").get_text())
+           try:
+               cursor = widget.connect.cursor()
+               cursor.execute( 'update books set isbn=?, author=?, title=? where id=?', (isbn, author, title, book_id) )
+               cursor.close()
+               widget.connect.commit()
+           except sqlite3.Error, e:
+               print e.args[0]
+               print u'Сбой обновления книги в базе'
+       except:
+           print u'Сбой чтения значений из полей'
+
    def onRowActivated(widget, cell, point, render_cell):
       # узел дерева второго уровня вложенности - ссылка на книгу
       if len(point) == 2:
          try:
             cell.set_text(widget.model.get_value(widget.model.get_iter(point), 0))
          except:
-            print 'Сбой в таблице!'
+            print u'Сбой в таблице!'
       elif len(point) == 1:
          book_id = widget.model.get_value(widget.model.get_iter(point), 4)
-         print 'book id = ', book_id
-         try: 
+         try:
             for ax in widget.figure.axes:
                widget.figure.delaxes(ax)
          except:
             widget.figure = plt.figure()
             widget.figure.autofmt_xdate()
-            widget.canvas = FigureCanvasGTK(widget.figure) # a gtk.DrawingArea   
+            widget.canvas = FigureCanvasGTK(widget.figure) # a gtk.DrawingArea
             widget.canvas.set_size_request(800, 600)
             #widget.canvas.mpl_connect('motion_notify_event', widget.on_drawarea)
-            widget.canvas.show()   
+            widget.canvas.show()
+
+            widget.builder.add_from_file("glade/book_dialog.glade")
             widget.graph_dlg = widget.builder.get_object("book_dialog")
             widget.graphview = widget.builder.get_object("dialog-vbox2")
-            widget.graphview.pack_start(widget.canvas, True, True)  
+            widget.graphview.pack_start(widget.canvas, True, True)
 
          cursor = widget.connect.cursor()
          links = cursor.execute('select links.id, links.urlname \
@@ -101,8 +145,8 @@ class App(object):
             plt.plot(x, y, label=link[1])
          plt.legend()
          plt.grid(True)
-         plt.xlabel('Дата')
-         plt.ylabel('Цена')
+         plt.xlabel(u'Дата')
+         plt.ylabel(u'Цена')
          #plt.show()
          widget.graph_dlg.show_all()
          widget.graph_dlg.run()
@@ -112,6 +156,7 @@ class App(object):
       url_name = event.get_text()
       (title, author, serial, isbn, desc2, price) = test_url(url_name)
       if widget.test_dlg == None:
+         widget.builder.add_from_file("glade/test_link_dialog.glade")
          widget.test_dlg = widget.builder.get_object("test_link_dialog")
       widget.builder.get_object("tfTitle").set_text(title)
       widget.builder.get_object("tfAuthor").set_text(author)
@@ -123,43 +168,22 @@ class App(object):
       widget.test_dlg.run()
       widget.test_dlg.hide_all()
 
-   def __init__libglade(self):
-      # Загружаем файл интерфейса
-      self.gladefile = "glade/gpryced.glade"
-      # дерево элементов интерфейса
-      self.widgetsTree = gtk.glade.XML(self.gladefile)
-      # Словарик, задающий связи событий с функциями-обработчиками
-#      dic = {
-#        "button1_clicked_cb" : self.text_operation,
-#        "button2_clicked_cb": self.text_operation,
-#	   }
-      # Магическая команда, соединяющая сигналы с обработчиками
-#      self.widgetsTree.signal_autoconnect(dic)
-      # Соединяем событие закрытия окна с функцией завершения приложения
-      self.window = self.widgetsTree.get_widget("main_window")
-      if (self.window):
-         self.window.connect("destroy", self.close_app)
-      # А это уже логика приложения. Задём маршруты обработки текста для каждой кнопки.
-      # Первый элемент - имя виджета-источника текста, второй - имя виджета-получателя
-#      self.routes = {'button1': ('textview1','textview2'),
-#                     'button2': ('textview2','textview1')}
-
    def __init__(self):
       self.builder = gtk.Builder()
-      # Загружаем наш интерфейс
+      # Загружаем интерфейс
       self.builder.add_from_file("glade/gpryced.glade")
       # присоединяем сигналы
       self.builder.connect_signals(self)
 
       self.main_window = self.builder.get_object("main_window")
       self.main_window.connect("destroy", self.close_app)
-      
+
       self.builder.get_object("toolbuttonPaste").set_sensitive(0)
       self.iter_src = None
 
-      self.test_dlg = self.builder.get_object("test_link_dialog")
-#      self.test_dlg.set_deletable(0)
-   
+      self.test_dlg = None
+      self.book_dlg = None
+
       self.treeview = self.builder.get_object("treeview1")
       self.model = self.builder.get_object("treestore1")
 
@@ -167,25 +191,48 @@ class App(object):
       self.connect = connect_to_base()
       cursor = self.connect.cursor()
       # перебор книг в базе
-      cursor.execute('select pr.*, prices.price, \
-                        strftime("%Y-%m-%d", pr.ptime) shorttime, \
-                        strftime("%s", pr.ptime) seconds, \
+      cursor.execute('select pr.*, ifnull(prices.price, 0) price, \
+                        case pr.ptime when 0 then 0 else strftime("%Y-%m-%d", pr.ptime) end shorttime, \
+                        case pr.ptime when 0 then 0 else strftime("%s", pr.ptime) end seconds, \
                         strftime("%s", datetime("now")) now \
-                     from prices, \
-                     (select books.id, \
-                        books.isbn, \
-                        books.author || ", " || books.title name, \
-                        links.urlname, \
-                        min(prices.price) pmin, \
-                        max(prices.price) pmax, \
-                        max(prices.timestamp) ptime, \
-                        links.id link \
-                     from prices \
-                        join links on prices.link=links.id \
-                        join books on links.book=books.id \
-                     group by books.id, books.isbn, books.author, books.title, links.urlname, links.id ) pr \
-                     where prices.link=pr.link and prices.timestamp=pr.ptime \
+                     from links \
+                     left join (select books.id, \
+                            books.isbn, \
+                            books.author || ", " || books.title name, \
+                            links.urlname, \
+                            min(ifnull(prices.price, 0)) pmin, \
+                            max(ifnull(prices.price, 0)) pmax, \
+                            max(ifnull(prices.timestamp, 0)) ptime, \
+                            links.id link \
+                          from links \
+                            left join prices on prices.link=links.id \
+                            join books on links.book=books.id \
+                          group by books.id, books.isbn, books.author, books.title, links.urlname, links.id \
+                          ) pr on links.id=pr.link \
+                     left join prices on links.id=prices.link \
+                     where (prices.timestamp=pr.ptime or pr.ptime = 0) \
                      order by pr.name, prices.price')
+
+#      cursor.execute('select pr.*, prices.price, \
+#                        strftime("%Y-%m-%d", pr.ptime) shorttime, \
+#                        strftime("%s", pr.ptime) seconds, \
+#                        strftime("%s", datetime("now")) now \
+#                     from prices, \
+#                     (select books.id, \
+#                        books.isbn, \
+#                        books.author || ", " || books.title name, \
+#                        links.urlname, \
+#                        min(prices.price) pmin, \
+#                        max(prices.price) pmax, \
+#                        ifnull(max(prices.timestamp),0) ptime, \
+#                        links.id link \
+#                     from links \
+#                        join prices on prices.link=links.id \
+#                        join books on links.book=books.id \
+#                     group by books.id, books.isbn, books.author, books.title, links.urlname, links.id ) pr \
+#                     where prices.link=pr.link and prices.timestamp=pr.ptime \
+#                     order by pr.name, prices.price')
+
       rows = cursor.fetchall()
       books_id = -1
       iter = None
@@ -199,6 +246,8 @@ class App(object):
       cursor_link = self.connect.cursor()
       for row in rows:
          url_name = row[3]
+#         print '====='
+#         for cell in row: print cell
          if url_name.find(u'ozon.ru') > -1:
             pix = pix_ozon
          elif url_name.find(u'read.ru') > -1:
@@ -211,32 +260,58 @@ class App(object):
             pix = pix_bolero
          else:
             pix = None
-         if row[8]==row[4]:
-            bottom_price = 'gtk-go-down'
-            fg_pricecurrent = fg_red
-         else:
-            bottom_price = ''
-            fg_pricecurrent = None
+         bottom_price = ''
+         fg_pricecurrent = None
+         # давно не обновлявшиеся книги выделить серым цветом
+         # 11 - текущее время
          if (long(row[11]) - long(row[10]))/60/60/24/14 > 0:
             fg_timestamp = fg_gray
          else:
             fg_timestamp = None
+            # если текущая цена совпадает с минимальной, 
+            # то выделить красным цветом и иконкой со стрелкой
+            if row[8]==row[4]:
+               bottom_price = 'gtk-go-down'
+               fg_pricecurrent = fg_red
          if books_id != row[0] :
             iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7]])
             books_id = row[0]
          else:
             imin, imax, iprice, iseconds = self.model.get(iter, 1, 2, 3, 8)
-            if row[4] < imin:
+
+# можно ставить картинкой магазин с минимальной ценой за все время            
+#            if row[4] < imin:
+#               self.model.set(iter, 6, pix)
+
+            # если где-либо есть не нулевая цена, то поставить картинку соответствующего магазина
+            # (т.к. цены сортированы в порядке убывания!)
+            if row[4] != 0 and imin == 0:
                self.model.set(iter, 6, pix)
-            imin = min(imin, row[4])
-            imax = max(imax, row[5])
-            iprice = min(iprice, row[8])
+            if row[4] > 0:
+                if imin == 0:
+                    imin = row[4]
+                else:
+                    imin = min(imin, row[4])
+            if row[5] > 0:
+                if imax == 0:
+                    imax = row[5]
+                else:
+                    imax = max(imax, row[5])
+            if row[8] > 0:
+                if iprice == 0:
+                    iprice = row[8]
+                else:
+                    iprice = min(iprice, row[8])
             self.model.set(iter, 1, imin, 2, imax, 3, iprice)
-            if iprice == imin:
-               self.model.set(iter, 5, 'gtk-go-down')
-            else: 
-               self.model.set(iter, 5, '')
-         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent,row[1], row[7]])
+            # row[11] - текущее время в секундах
+            if iseconds > 0:
+                if iprice == imin and (long(row[11]) - long(iseconds))/60/60/24/5 <= 0:
+                   self.model.set(iter, 5, 'gtk-go-down')
+                else:
+                   self.model.set(iter, 5, '')
+            else:
+                self.model.set(iter, 8, long(row[10]), 7, row[9], 9, None)
+         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7]])
          if fg_pricecurrent != None: self.model.set(iter, 10, fg_pricecurrent)
 
       # отображает данные, хранящиеся в list_store1
@@ -245,7 +320,7 @@ class App(object):
 
    def close_app(self, widget):
       gtk.main_quit()
-      
+
 if __name__ == "__main__":
     # признак запуска на windows-python
     if sys.platform.find(u'win') > -1:
