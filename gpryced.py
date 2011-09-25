@@ -34,7 +34,7 @@ class App(object):
          #  только  нужное место
          if len(model.get_path(iter_dest)) != 1:
             return
-         # не вставлять в сво же родителя
+         # не вставлять в своего же родителя
          if model.iter_parent(widget.iter_src) != iter_dest :
             try:
                book_id = model[iter_dest][4]
@@ -152,6 +152,27 @@ class App(object):
          widget.graph_dlg.run()
          widget.graph_dlg.hide_all()
 
+   def filtering(self, model, path, iter, user_data):
+       # проверять "корни" дерева - книги
+       if model.iter_depth(iter) == 0:
+           title = unicode(model.get_value(iter, 0)).lower()
+           if title.find(user_data) == -1:
+               model.set_value(iter, 13, False)
+           else:
+               model.set_value(iter, 13, True)
+
+   def onFind(widget, event):
+      try:
+         widget.model.foreach(widget.filtering, unicode(event.get_text()).lower())
+      except:
+         pass
+
+   def onFindReset(widget, event):
+      try:
+         widget.model.foreach(widget.filtering, u'')
+      except:
+         pass
+
    def onCheckButton(widget, event, data=None):
       url_name = event.get_text()
       (title, author, serial, isbn, desc2, price) = test_url(url_name)
@@ -168,30 +189,9 @@ class App(object):
       widget.test_dlg.run()
       widget.test_dlg.hide_all()
 
-   def __init__(self):
-      self.builder = gtk.Builder()
-      # Загружаем интерфейс
-      self.builder.add_from_file("glade/gpryced.glade")
-      # присоединяем сигналы
-      self.builder.connect_signals(self)
-
-      self.main_window = self.builder.get_object("main_window")
-      self.main_window.connect("destroy", self.close_app)
-
-      self.builder.get_object("toolbuttonPaste").set_sensitive(0)
-      self.iter_src = None
-
-      self.test_dlg = None
-      self.book_dlg = None
-
-      self.treeview = self.builder.get_object("treeview1")
-      self.model = self.builder.get_object("treestore1")
-
-      now_day = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-      self.connect = connect_to_base()
-      cursor = self.connect.cursor()
+   def getBooks(self, cursor0):
       # перебор книг в базе
-      cursor.execute('select pr.*, ifnull(prices.price, 0) price, \
+      cursor0.execute('select pr.*, ifnull(prices.price, 0) price, \
                         case pr.ptime when 0 then 0 else strftime("%Y-%m-%d", pr.ptime) end shorttime, \
                         case pr.ptime when 0 then 0 else strftime("%s", pr.ptime) end seconds, \
                         strftime("%s", datetime("now")) now \
@@ -212,7 +212,6 @@ class App(object):
                      left join prices on links.id=prices.link \
                      where (prices.timestamp=pr.ptime or pr.ptime = 0) \
                      order by pr.name, prices.price')
-
 #      cursor.execute('select pr.*, prices.price, \
 #                        strftime("%Y-%m-%d", pr.ptime) shorttime, \
 #                        strftime("%s", pr.ptime) seconds, \
@@ -232,8 +231,10 @@ class App(object):
 #                     group by books.id, books.isbn, books.author, books.title, links.urlname, links.id ) pr \
 #                     where prices.link=pr.link and prices.timestamp=pr.ptime \
 #                     order by pr.name, prices.price')
+      return cursor0.fetchall()
 
-      rows = cursor.fetchall()
+   def loadModel(self):
+      rows = self.getBooks(self.connect.cursor())
       books_id = -1
       iter = None
       fg_gray = gtk.gdk.Color('gray')
@@ -243,7 +244,6 @@ class App(object):
       pix_myshop = gtk.gdk.pixbuf_new_from_file('pics/myshop-16.png')
       pix_ukazka = gtk.gdk.pixbuf_new_from_file('pics/ukazka-16.png')
       pix_bolero = gtk.gdk.pixbuf_new_from_file('pics/bolero-16.png')
-      cursor_link = self.connect.cursor()
       for row in rows:
          url_name = row[3]
 #         print '====='
@@ -274,7 +274,8 @@ class App(object):
                bottom_price = 'gtk-go-down'
                fg_pricecurrent = fg_red
          if books_id != row[0] :
-            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7]])
+            is_visible = True
+            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible])
             books_id = row[0]
          else:
             imin, imax, iprice, iseconds = self.model.get(iter, 1, 2, 3, 8)
@@ -311,11 +312,44 @@ class App(object):
                    self.model.set(iter, 5, '')
             else:
                 self.model.set(iter, 8, long(row[10]), 7, row[9], 9, None)
-         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7]])
+         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True])
          if fg_pricecurrent != None: self.model.set(iter, 10, fg_pricecurrent)
+       
+   def __init__(self):
+      self.builder = gtk.Builder()
+      # Загружаем интерфейс
+      self.builder.add_from_file("glade/gpryced.glade")
+      # присоединяем сигналы
+      self.builder.connect_signals(self)
+
+      self.main_window = self.builder.get_object("main_window")
+      self.main_window.connect("destroy", self.close_app)
+
+      self.builder.get_object("toolbuttonPaste").set_sensitive(0)
+      self.iter_src = None
+
+      self.test_dlg = None
+      self.book_dlg = None
+
+      self.treeview = self.builder.get_object("treeview1")
+      self.model = self.builder.get_object("treestore1")
+
+#      now_day = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+      self.connect = connect_to_base()
+      
+      self.loadModel()
+      # мне не удалось создать внятно фильтр в glade (хотя он там есть), 
+      # потому что там нельзя указать колонку видимости 
+      # или функцию-обработчик.
+      # и в тоже время в коде тоже нельзя выставить на glade-объект 
+      # колонку видимости или функцию-обработчик,
+      # потому что из TreeStore никак не удалось извлечь объект фильтра
+#      self.filter = self.builder.get_object("treemodelfilter1")
+      self.filter = self.model.filter_new()
+      self.filter.set_visible_column(13)
 
       # отображает данные, хранящиеся в list_store1
-      self.treeview.set_model(model=self.model)
+      self.treeview.set_model(model=self.filter)
       self.main_window.show_all()
 
    def close_app(self, widget):

@@ -8,6 +8,14 @@
   <object class="GtkAction" id="actionEditBook">
     <signal name="activate" handler="onEditBook" object="treeview-selection" swapped="no"/>
   </object>
+  <object class="GtkAction" id="actionFind">
+    <property name="stock_id">gtk-find</property>
+    <signal name="activate" handler="onFind" object="tfPattern" swapped="no"/>
+  </object>
+  <object class="GtkAction" id="actionFindReset">
+    <property name="stock_id">gtk-clear</property>
+    <signal name="activate" handler="onFindReset" object="tfPattern" swapped="no"/>
+  </object>
   <object class="GtkAction" id="actionPaste">
     <property name="stock_id">gtk-paste</property>
     <signal name="activate" handler="onPaste" object="treeview-selection" swapped="no"/>
@@ -264,7 +272,7 @@
                 <property name="border_width">3</property>
                 <property name="homogeneous">True</property>
                 <child>
-                  <object class="GtkEntry" id="entry3">
+                  <object class="GtkEntry" id="tfPattern">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">•</property>
@@ -304,16 +312,45 @@
                 <property name="border_width">3</property>
                 <property name="homogeneous">True</property>
                 <child>
-                  <object class="GtkButton" id="button3">
-                    <property name="label">gtk-find</property>
+                  <object class="GtkHBox" id="box10">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
-                    <property name="use_stock">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="homogeneous">True</property>
+                    <child>
+                      <object class="GtkButton" id="buttonFind">
+                        <property name="label">gtk-find</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="related_action">actionFind</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="buttonFindReset">
+                        <property name="label">gtk-clear</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="related_action">actionFindReset</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
@@ -452,6 +489,9 @@
       </object>
     </child>
   </object>
+  <object class="GtkTreeModelFilter" id="treemodelfilter1">
+    <property name="child_model">treestore1</property>
+  </object>
   <object class="GtkTreeStore" id="treestore1">
     <columns>
       <!-- column-name name -->
@@ -480,6 +520,8 @@
       <column type="gchararray"/>
       <!-- column-name link_id -->
       <column type="glong"/>
+      <!-- column-name is_visible -->
+      <column type="gboolean"/>
     </columns>
   </object>
 </interface>

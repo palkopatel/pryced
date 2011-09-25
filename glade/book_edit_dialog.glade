@@ -2,6 +2,7 @@
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkAction" id="actionSave">
+    <property name="stock_id">gtk-apply</property>
     <signal name="activate" handler="onEditSave" object="book_edit_dialog" swapped="no"/>
   </object>
   <object class="GtkDialog" id="book_edit_dialog">
@@ -23,7 +24,7 @@
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="buttonSave">
-                <property name="label">gtk-ok</property>
+                <property name="label">gtk-apply</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
