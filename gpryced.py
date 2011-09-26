@@ -20,25 +20,58 @@ import matplotlib.dates
 from matplotlib.backends.backend_gtk import FigureCanvasGTK
 import time
 
+# номера полей в таблице с книгами
+F_NAME = 0
+F_PRICE_MIN = 1
+F_PRICE_MAX = 2
+F_PRICE_CUR = 3
+F_BOOK_ID = 4
+F_SITEICON = 5
+F_FAVICON = 6
+F_TIMESTAMP = 7
+F_UNIXSEC = 8
+F_FG_TIMESTAMP = 9
+F_FG_PRICE_CUR = 10
+F_ISBN = 11
+F_LINK_ID = 12
+F_IS_VISIBLE = 13
+
+# вывод всех методов класса (иногда нужно для отладки)
+#import inspect
+#res = inspect.getmembers(model)
+#for item in res: print item
+
 class App(object):
 
    def onCut(widget, event):
-      model, widget.iter_src = event.get_selected()
-      widget.builder.get_object("toolbuttonPaste").set_sensitive(1)
+      model_pre, iter_src = event.get_selected()
+      try:
+         # конвертировать модель и узел (для модели-фильтра)
+         widget.iter_src = model_pre.convert_iter_to_child_iter(iter_src)
+         model = model_pre.get_model()
+         # не копировать с верхнего уровня
+         if len(model.get_path(widget.iter_src)) == 1:
+            return
+         widget.builder.get_object("toolbuttonPaste").set_sensitive(1)
+      except:
+         print 'no cut!'
 
    def onPaste(widget, event):
          # копировать нечего
          if widget.iter_src == None:
             return
-         model, iter_dest = event.get_selected()
-         #  только  нужное место
+         model_pre, iter_dest_pre = event.get_selected()
+         # конвертировать модель и узел (для модели-фильтра)
+         iter_dest = model_pre.convert_iter_to_child_iter(iter_dest_pre)
+         model = model_pre.get_model()
+         # вставлять разрешено только в первый уровень
          if len(model.get_path(iter_dest)) != 1:
             return
          # не вставлять в своего же родителя
          if model.iter_parent(widget.iter_src) != iter_dest :
             try:
-               book_id = model[iter_dest][4]
-               link_id = model[widget.iter_src][12]
+               book_id = model[iter_dest][F_BOOK_ID]
+               link_id = model[widget.iter_src][F_LINK_ID]
                cursor = widget.connect.cursor()
                cursor.execute( 'update links set book=? where id=?', (book_id, link_id) )
                cursor.close()
@@ -51,14 +84,21 @@ class App(object):
                print u'Ошибка при выполнении запроса:', e.args[0]
 
    def onEditBook(widget, event):
-      model, widget.iter_src = event.get_selected()
+      model_pre, iter_src_pre = event.get_selected()
+      # конвертировать модель и узел (для модели-фильтра)
+      widget.iter_edit = model_pre.convert_iter_to_child_iter(iter_src_pre)
+      widget.model_edit = model = model_pre.get_model()
+
+      # редактировать только в первый уровень
+      if len(model.get_path(widget.iter_edit)) != 1:
+          return
 
       if widget.book_dlg == None:
           widget.builder.add_from_file("glade/book_edit_dialog.glade")
           widget.book_dlg = widget.builder.get_object("book_edit_dialog")
           widget.builder.connect_signals(widget)
 
-      book_id = model[widget.iter_src][4]
+      book_id = model[widget.iter_edit][F_BOOK_ID]
       widget.builder.get_object("tfBookId").set_text(str(book_id))
       cursor = widget.connect.cursor()
       cursor.execute('select books.isbn, \
@@ -83,10 +123,14 @@ class App(object):
            title = unicode(widget.builder.get_object("tfTitle").get_text())
            book_id = int(widget.builder.get_object("tfBookId").get_text())
            try:
+               # обновить в базе
                cursor = widget.connect.cursor()
                cursor.execute( 'update books set isbn=?, author=?, title=? where id=?', (isbn, author, title, book_id) )
                cursor.close()
                widget.connect.commit()
+               # обновить на экране (в модели)
+               widget.model_edit.set(widget.iter_edit, F_NAME, author + ', ' + title)
+               widget.model_edit.set(widget.iter_edit, F_ISBN, isbn)
            except sqlite3.Error, e:
                print e.args[0]
                print u'Сбой обновления книги в базе'
@@ -94,14 +138,15 @@ class App(object):
            print u'Сбой чтения значений из полей'
 
    def onRowActivated(widget, cell, point, render_cell):
+      model = widget.treeview.get_model()
       # узел дерева второго уровня вложенности - ссылка на книгу
       if len(point) == 2:
          try:
-            cell.set_text(widget.model.get_value(widget.model.get_iter(point), 0))
+            cell.set_text(model.get_value(model.get_iter(point), F_NAME))
          except:
             print u'Сбой в таблице!'
       elif len(point) == 1:
-         book_id = widget.model.get_value(widget.model.get_iter(point), 4)
+         book_id = model.get_value(model.get_iter(point), F_BOOK_ID)
          try:
             for ax in widget.figure.axes:
                widget.figure.delaxes(ax)
@@ -155,11 +200,11 @@ class App(object):
    def filtering(self, model, path, iter, user_data):
        # проверять "корни" дерева - книги
        if model.iter_depth(iter) == 0:
-           title = unicode(model.get_value(iter, 0)).lower()
+           title = unicode(model.get_value(iter, F_NAME)).lower()
            if title.find(user_data) == -1:
-               model.set_value(iter, 13, False)
+               model.set_value(iter, F_IS_VISIBLE, False)
            else:
-               model.set_value(iter, 13, True)
+               model.set_value(iter, F_IS_VISIBLE, True)
 
    def onFind(widget, event):
       try:
@@ -278,16 +323,19 @@ class App(object):
             iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible])
             books_id = row[0]
          else:
-            imin, imax, iprice, iseconds = self.model.get(iter, 1, 2, 3, 8)
+            imin, imax, iprice, iseconds = self.model.get(iter, 
+                                                          F_PRICE_MIN, 
+                                                          F_PRICE_MAX, 
+                                                          F_PRICE_CUR, F_UNIXSEC)
 
 # можно ставить картинкой магазин с минимальной ценой за все время            
 #            if row[4] < imin:
-#               self.model.set(iter, 6, pix)
+#               self.model.set(iter, F_FAVICON, pix)
 
             # если где-либо есть не нулевая цена, то поставить картинку соответствующего магазина
             # (т.к. цены сортированы в порядке убывания!)
             if row[4] != 0 and imin == 0:
-               self.model.set(iter, 6, pix)
+               self.model.set(iter, F_FAVICON, pix)
             if row[4] > 0:
                 if imin == 0:
                     imin = row[4]
@@ -303,17 +351,23 @@ class App(object):
                     iprice = row[8]
                 else:
                     iprice = min(iprice, row[8])
-            self.model.set(iter, 1, imin, 2, imax, 3, iprice)
+            self.model.set(iter, 
+                           F_PRICE_MIN, imin, 
+                           F_PRICE_MAX, imax, 
+                           F_PRICE_CUR, iprice)
             # row[11] - текущее время в секундах
             if iseconds > 0:
                 if iprice == imin and (long(row[11]) - long(iseconds))/60/60/24/5 <= 0:
-                   self.model.set(iter, 5, 'gtk-go-down')
+                   self.model.set(iter, F_SITEICON, 'gtk-go-down')
                 else:
-                   self.model.set(iter, 5, '')
+                   self.model.set(iter, F_SITEICON, '')
             else:
-                self.model.set(iter, 8, long(row[10]), 7, row[9], 9, None)
+                self.model.set(iter, 
+                               F_UNIXSEC, long(row[10]), 
+                               F_TIMESTAMP, row[9], 
+                               F_FG_TIMESTAMP, None)
          self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True])
-         if fg_pricecurrent != None: self.model.set(iter, 10, fg_pricecurrent)
+         if fg_pricecurrent != None: self.model.set(iter, F_FG_PRICE_CUR, fg_pricecurrent)
        
    def __init__(self):
       self.builder = gtk.Builder()
@@ -346,7 +400,7 @@ class App(object):
       # потому что из TreeStore никак не удалось извлечь объект фильтра
 #      self.filter = self.builder.get_object("treemodelfilter1")
       self.filter = self.model.filter_new()
-      self.filter.set_visible_column(13)
+      self.filter.set_visible_column(F_IS_VISIBLE)
 
       # отображает данные, хранящиеся в list_store1
       self.treeview.set_model(model=self.filter)
