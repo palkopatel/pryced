@@ -254,16 +254,16 @@ def load_new_price(connect, now_day, insert_mode):
             colornum = FG_GREY|FG_INTENSITY|BG_YELLOW
          elif row[1].find(U'my-shop.ru') > -1: 
             site = u'my-shop'
-            colornum = FG_BLACK|BG_GREY|BG_INTENSITY
+            colornum = FG_GREY|FG_INTENSITY|BG_GREY
          elif row[1].find(U'ukazka.ru') > -1: 
             site = u'ukazka '
-            colornum = FG_GREY|BG_BLUE|BG_INTENSITY
+            colornum = FG_GREY|FG_INTENSITY|BG_BLUE|BG_INTENSITY
          elif row[1].find(U'bolero.ru') > -1: 
             site = u'bolero '
-            colornum = FG_GREY|BG_MAGENTA|BG_INTENSITY
+            colornum = FG_GREY|FG_INTENSITY|BG_MAGENTA|BG_INTENSITY
          elif row[1].find(U'labirint.ru') > -1: 
             site = u'labiru '
-            colornum = FG_GREY|BG_RED|BG_INTENSITY
+            colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
          else:
             site = u'none'
          console_color(colornum)
