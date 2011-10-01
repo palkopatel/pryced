@@ -3,7 +3,7 @@
 
 # prices watcher (ozon.ru, read.ru)
 # скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
-# ukazka.ru, bolero.ru
+# ukazka.ru, bolero.ru, labirint.ru
 
 try:
    from parsing import *
@@ -147,6 +147,8 @@ def load_link(connect, now_day, url_name, create_flag):
             (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
          elif url_name.find(u'bolero.ru') > -1: 
             (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
+         elif url_name.find(u'labirint.ru') > -1:
+            (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, create_flag)
          else:
             return 0
       if create_flag > 0:
@@ -237,6 +239,8 @@ def load_new_price(connect, now_day, insert_mode):
             site = u'\033[1;44mukazka \033[0m: '
          elif row[1].find(U'bolero.ru') > -1: 
             site = u'\033[1;45mbolero \033[0m: '
+         elif row[1].find(U'labirint.ru') > -1: 
+            site = u'\033[1;41mlabiru \033[0m: '
          else:
             site = u'none'
          sys.stdout.write(site)
@@ -257,6 +261,9 @@ def load_new_price(connect, now_day, insert_mode):
          elif row[1].find(U'bolero.ru') > -1: 
             site = u'bolero '
             colornum = FG_GREY|BG_MAGENTA|BG_INTENSITY
+         elif row[1].find(U'labirint.ru') > -1: 
+            site = u'labiru '
+            colornum = FG_GREY|BG_RED|BG_INTENSITY
          else:
             site = u'none'
          console_color(colornum)

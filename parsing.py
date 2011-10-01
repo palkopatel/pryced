@@ -266,6 +266,51 @@ def bolero_parse_book(soup, create_flag):
    price = soup.find('div', attrs={'class':'price'}).contents[0].string.replace('&nbsp;', '')
    return (title, author, serial, isbn, '', price)
 
+def labiru_parse_book(soup, create_flag):
+   """ разбор страницы с labirint.ru
+
+   """
+   serial = ''
+   #<div id="product-specs">
+   product = soup.find('div', attrs={'id':'product-specs'})
+   if create_flag > 0:
+      try:
+         #<div class="isbn smallbr">ISBN: 978-5-89059-155-5</div>
+         isbn = product.find('div', attrs={'class':'isbn smallbr'}).string.split(': ')[1]
+      except:
+         isbn = ''
+      try:
+         #<div class="">
+         nonames = product.find('div', attrs={'class':''})
+         author = nonames.find('a').string
+      except:
+         author = ''
+      try:
+         #<meta property="og:title" content="Горы моря и гиганты" />
+         title_tag = soup.find('meta', attrs={'property':'og:title'})
+         title = title_tag['content']
+      except:
+         title = ''
+   else:
+      serial = ''
+      title = ''
+      author = ''
+      isbn = ''
+   try:
+      #<div class="availibility">Наличие: <span class="rang-expected">Ожидается</span></div>
+      #<div class="availibility">Наличие: <span class="rang-available">На складе</span></div>
+      availibility = product.find('div', attrs={'class':'availibility'})
+      available = availibility.find('span', attrs={'class':'rang-available'})
+      if available != None:
+         #<div class='price_num'>Цена <span class="value">680</span> руб.</div>
+         price_div = product.find('div', attrs={'class':'price_num'})
+         price = price_div.find('span', attrs={'class':'value'}).string
+      else:
+         price = '0'
+   except:
+      price = '0'
+   return (title, author, serial, isbn, '', price)
+
 def test_url(url_name):
    """ функция для тестирования (запуск с аргументом -t <ссылка>)
 
@@ -287,6 +332,8 @@ def test_url(url_name):
          (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
       elif url_name.find(u'bolero.ru') > -1:
          (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
+      elif url_name.find(u'labirint.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, 1)
    print u'title:  ' + title
    print u'author: ' + author
    print u'serial: ' + serial
