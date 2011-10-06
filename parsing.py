@@ -263,7 +263,11 @@ def bolero_parse_book(soup, create_flag):
       title = ''
       author = ''
       isbn = ''
-   price = soup.find('div', attrs={'class':'price'}).contents[0].string.replace('&nbsp;', '')
+   price_tag = soup.find('div', attrs={'class':'price'})
+   if price_tag != None:
+       price = price_tag.contents[0].string.replace('&nbsp;', '')
+   else:
+       price = '0'
    return (title, author, serial, isbn, '', price)
 
 def labiru_parse_book(soup, create_flag):
