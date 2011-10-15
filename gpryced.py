@@ -170,7 +170,11 @@ class App(object):
             where books.id=?', [book_id] )
          ids = []
          for link in links:
-            ids.append([link[0], link[1]])
+            try:
+                site_name = link[1].split('/')[2].replace('www.', '').replace('.ru', '')
+            except:
+                site_name = link[1]
+            ids.append([link[0], site_name])
 
          cursor = widget.connect.cursor()
          query = 'select price, timestamp \
@@ -290,6 +294,7 @@ class App(object):
       pix_ukazka = gtk.gdk.pixbuf_new_from_file('pics/ukazka-16.png')
       pix_bolero = gtk.gdk.pixbuf_new_from_file('pics/bolero-16.png')
       pix_labiru = gtk.gdk.pixbuf_new_from_file('pics/labiru-16.png')
+      pix_bgshop = gtk.gdk.pixbuf_new_from_file('pics/bgshop-16.png')
       for row in rows:
          url_name = row[3]
 #         print '====='
@@ -306,6 +311,8 @@ class App(object):
             pix = pix_bolero
          elif url_name.find(u'labirint.ru') > -1:
             pix = pix_labiru
+         elif url_name.find(u'bgshop.ru') > -1:
+            pix = pix_bgshop
          else:
             pix = None
          bottom_price = ''
@@ -321,6 +328,7 @@ class App(object):
             if row[8]==row[4]:
                bottom_price = 'gtk-go-down'
                fg_pricecurrent = fg_red
+         # "покинули" текущую книгу
          if books_id != row[0] :
             is_visible = True
             iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible])

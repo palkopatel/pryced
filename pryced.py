@@ -3,7 +3,7 @@
 
 # prices watcher (ozon.ru, read.ru)
 # скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
-# ukazka.ru, bolero.ru, labirint.ru
+# ukazka.ru, bolero.ru, labirint.ru, bgshop.ru
 
 try:
    from parsing import *
@@ -15,6 +15,7 @@ import datetime # для datetime.datetime.now()
 import sqlite3
 import sys
 import urllib2
+#import codecs
 
 try:
    from ctypes import windll
@@ -149,6 +150,8 @@ def load_link(connect, now_day, url_name, create_flag):
             (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
          elif url_name.find(u'labirint.ru') > -1:
             (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, create_flag)
+         elif url_name.find(u'bgshop.ru') > -1:
+            (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, create_flag)
          else:
             return 0
       if create_flag > 0:
@@ -241,6 +244,8 @@ def load_new_price(connect, now_day, insert_mode):
             site = u'\033[1;45mbolero \033[0m: '
          elif row[1].find(U'labirint.ru') > -1: 
             site = u'\033[1;41mlabiru \033[0m: '
+         elif row[1].find(U'bgshop.ru') > -1: 
+            site = u'\033[1;41mbgshop \033[0m: '
          else:
             site = u'none'
          sys.stdout.write(site)
@@ -263,6 +268,9 @@ def load_new_price(connect, now_day, insert_mode):
             colornum = FG_GREY|FG_INTENSITY|BG_MAGENTA|BG_INTENSITY
          elif row[1].find(U'labirint.ru') > -1: 
             site = u'labiru '
+            colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
+         elif row[1].find(U'bgshop.ru') > -1: 
+            site = u'bgshop '
             colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
          else:
             site = u'none'
@@ -323,6 +331,10 @@ def usage_message():
 
 if __name__ == "__main__":
    try:
+      #для отладки вывода с исользованием трубы |
+      #(win-консоль не понимает utf8)
+      #sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+
           # значение даты для вставки в базу
       now_day = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
       connect = connect_to_base()

@@ -296,7 +296,6 @@ def labiru_parse_book(soup, create_flag):
       except:
          title = ''
    else:
-      serial = ''
       title = ''
       author = ''
       isbn = ''
@@ -311,6 +310,36 @@ def labiru_parse_book(soup, create_flag):
          price = price_div.find('span', attrs={'class':'value'}).string
       else:
          price = '0'
+   except:
+      price = '0'
+   return (title, author, serial, isbn, '', price)
+
+def bgshop_parse_book(soup, create_flag):
+   """ разбор страницы с bgshop.ru
+
+   """
+   serial = ''
+   product = soup.find('div', attrs={'id':'ctl00_cph_ucGoodCard_pnl_card'})
+   if create_flag > 0:
+       try:
+           title = product.find('span', attrs={'class':'title'}).find('b').string
+       except:
+           title = ''
+       try:
+           author = product.find('a', attrs={'class':'author'}).string
+       except:
+           author = ''
+       try:
+           isbn = product.find('span', attrs={'id':'ctl00_cph_ucGoodCard_lbl_IsbnAsIs'}).string
+       except:
+           isbn = ''
+   else:
+       title = ''
+       author = ''
+       isbn = ''
+   try:
+       # хитроумная замена - это борьба с неразрывным пробелом (символ с кодом 160)
+       price = soup.find('span', attrs={'class':'price'}).string.split(',')[0].replace(u'\xa0', '')
    except:
       price = '0'
    return (title, author, serial, isbn, '', price)
@@ -338,6 +367,8 @@ def test_url(url_name):
          (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
       elif url_name.find(u'labirint.ru') > -1:
          (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, 1)
+      elif url_name.find(u'bgshop.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, 1)
    print u'title:  ' + title
    print u'author: ' + author
    print u'serial: ' + serial
