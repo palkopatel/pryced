@@ -19,6 +19,18 @@ import matplotlib.pyplot as plt
 import matplotlib.dates
 from matplotlib.backends.backend_gtk import FigureCanvasGTK
 import time
+import matplotlib as mpl
+
+mpl.rcParams['lines.linewidth'] = 1.5
+mpl.rcParams['legend.frameon'] = False
+mpl.rcParams['legend.fontsize'] = 'medium'
+mpl.rcParams['axes.grid'] = True
+#mpl.rcParams['axes.labelsize'] = 'small'
+#mpl.rcParams['axes.axisbelow'] = True
+mpl.rcParams['figure.subplot.left'] = 0.08
+mpl.rcParams['figure.subplot.right'] = 0.98
+mpl.rcParams['figure.subplot.top'] = 0.93
+mpl.rcParams['figure.subplot.hspace'] = 0.1
 
 # номера полей в таблице с книгами
 F_NAME = 0
@@ -176,6 +188,7 @@ class App(object):
                 site_name = link[1]
             ids.append([link[0], site_name])
 
+         min_price = 0
          cursor = widget.connect.cursor()
          query = 'select price, timestamp \
                   from prices where link = ? \
@@ -188,14 +201,22 @@ class App(object):
             for row in rows:
                timestamp = row[1]
                timestamp1 = datetime.datetime(*time.strptime(row[1], "%Y-%m-%d %H:%M:%S")[0:5])
-               timestamp = matplotlib.dates.date2num(timestamp1)
+               #timestamp = matplotlib.dates.date2num(timestamp1)
                x.append(timestamp1)
                y.append(row[0])
+               if int(row[0]) < min_price or min_price == 0:
+                   min_price = int(row[0])
+                   min_timestamp = timestamp1
             plt.plot(x, y, label=link[1])
-         plt.legend()
+         print min_price, min_timestamp
+         plt.legend(loc='upper left')
          plt.grid(True)
          plt.xlabel(u'Дата')
          plt.ylabel(u'Цена')
+         plt.title(model.get_value(model.get_iter(point), F_NAME))
+#         plt.annotate('min', xy=(min_price, min_timestamp), 
+#                      xytext=(0.5,0.5),textcoords='offset points', 
+#                      arrowprops=dict(facecolor='black', shrink=0.05))
          #plt.show()
          widget.graph_dlg.show_all()
          widget.graph_dlg.run()
