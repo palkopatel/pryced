@@ -316,6 +316,7 @@ class App(object):
       pix_bolero = gtk.gdk.pixbuf_new_from_file('pics/bolero-16.png')
       pix_labiru = gtk.gdk.pixbuf_new_from_file('pics/labiru-16.png')
       pix_bgshop = gtk.gdk.pixbuf_new_from_file('pics/bgshop-16.png')
+      pix_setbook = gtk.gdk.pixbuf_new_from_file('pics/setbook-16.png')
       for row in rows:
          url_name = row[3]
 #         print '====='
@@ -334,6 +335,8 @@ class App(object):
             pix = pix_labiru
          elif url_name.find(u'bgshop.ru') > -1:
             pix = pix_bgshop
+         elif url_name.find(u'setbook.ru') > -1:
+            pix = pix_setbook
          else:
             pix = None
          bottom_price = ''

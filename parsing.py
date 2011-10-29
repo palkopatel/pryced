@@ -344,6 +344,35 @@ def bgshop_parse_book(soup, create_flag):
       price = '0'
    return (title, author, serial, isbn, '', price)
 
+def setbook_parse_book(soup, create_flag):
+   """ разбор страницы с setbook.ru
+
+   """
+   serial = ''
+   if create_flag > 0:
+       try:
+           title = soup.find('div', attrs={'class':'row_product_name'}).string
+       except:
+           title = ''
+       try:
+           author = soup.find('div', attrs={'class':'row_product_author'}).find('a').string
+       except:
+           author = ''
+       try:
+           isbn = soup.find('div', attrs={'class':'row_product_model'}).string.split(':')[1].replace(' ', '')
+       except:
+           isbn = ''
+   else:
+       title = ''
+       author = ''
+       isbn = ''
+   try:
+       # '`' - разделитель тысяч
+       price = soup.find('div', attrs={'class':'row_product_price'}).string.split(u'\xa0')[0].replace('`', '')
+   except:
+      price = '0'
+   return (title, author, serial, isbn, '', price)
+
 def test_url(url_name):
    """ функция для тестирования (запуск с аргументом -t <ссылка>)
 
@@ -369,6 +398,8 @@ def test_url(url_name):
          (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, 1)
       elif url_name.find(u'bgshop.ru') > -1:
          (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, 1)
+      elif url_name.find(u'setbook.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, 1)
    print u'title:  ' + title
    print u'author: ' + author
    print u'serial: ' + serial
