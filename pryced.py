@@ -82,9 +82,9 @@ def connect_to_base():
     except sqlite3.Error, e:
         print u'Ошибка при создании таблицы:', e.args[0]
 
-    # добавление колонки для версии без ISBN
+    # добавление колонки для версии без состояния
     try:
-        connect.execute('ALTER TABLE links ADD COLUMN book int;')
+        connect.execute('ALTER TABLE links ADD COLUMN state int;')
         connect.execute("VACUUM")
     except:
         pass

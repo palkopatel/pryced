@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkAction" id="actionCut">
     <property name="stock_id">gtk-cut</property>
     <signal name="activate" handler="onCut" object="treeview-selection" swapped="no"/>
@@ -36,10 +37,10 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkToolButton" id="toolbuttonCut">
+                <property name="use_action_appearance">False</property>
+                <property name="related_action">actionCut</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="related_action">actionCut</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">Вырезать</property>
                 <property name="stock_id">gtk-cut</property>
               </object>
@@ -50,10 +51,10 @@
             </child>
             <child>
               <object class="GtkToolButton" id="toolbuttonPaste">
+                <property name="use_action_appearance">False</property>
+                <property name="related_action">actionPaste</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="related_action">actionPaste</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">Вставить</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-paste</property>
@@ -65,10 +66,10 @@
             </child>
             <child>
               <object class="GtkToolButton" id="toolbuttonEditBook">
+                <property name="use_action_appearance">False</property>
+                <property name="related_action">actionEditBook</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="related_action">actionEditBook</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">Редактировать</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-edit</property>
@@ -90,122 +91,142 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow1">
+              <object class="GtkVPaned" id="vpaned1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">never</property>
                 <child>
-                  <object class="GtkTreeView" id="treeview1">
+                  <object class="GtkScrolledWindow" id="scrolledwindow1">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscroll_policy">natural</property>
-                    <property name="model">treestore1</property>
-                    <property name="headers_clickable">False</property>
-                    <property name="search_column">0</property>
-                    <property name="enable_grid_lines">horizontal</property>
-                    <property name="enable_tree_lines">True</property>
-                    <signal name="row-activated" handler="onRowActivated" object="tfNewLink" swapped="no"/>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="treeview-selection"/>
-                    </child>
+                    <property name="hscrollbar_policy">never</property>
                     <child>
-                      <object class="GtkTreeViewColumn" id="book_name">
-                        <property name="resizable">True</property>
-                        <property name="title">Название</property>
-                        <property name="clickable">True</property>
-                        <property name="sort_indicator">True</property>
-                        <property name="sort_column_id">0</property>
+                      <object class="GtkTreeView" id="treeview1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">treestore1</property>
+                        <property name="headers_clickable">False</property>
+                        <property name="search_column">0</property>
+                        <property name="enable_grid_lines">horizontal</property>
+                        <property name="enable_tree_lines">True</property>
+                        <signal name="cursor-changed" handler="onCursorChanged" swapped="no"/>
+                        <signal name="row-activated" handler="onRowActivated" object="tfNewLink" swapped="no"/>
                         <child>
-                          <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
-                          <attributes>
-                            <attribute name="pixbuf">6</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="book_name">
+                            <property name="resizable">True</property>
+                            <property name="title">Название</property>
+                            <property name="clickable">True</property>
+                            <property name="sort_indicator">True</property>
+                            <property name="sort_column_id">0</property>
+                            <child>
+                              <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
+                              <attributes>
+                                <attribute name="pixbuf">6</attribute>
+                              </attributes>
+                            </child>
+                            <child>
+                              <object class="GtkCellRendererSpin" id="cellrendererspin1"/>
+                              <attributes>
+                                <attribute name="text">0</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
                         <child>
-                          <object class="GtkCellRendererSpin" id="cellrendererspin1"/>
-                          <attributes>
-                            <attribute name="text">0</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="price_current">
+                            <property name="sizing">fixed</property>
+                            <property name="min_width">60</property>
+                            <property name="max_width">60</property>
+                            <property name="title">Цена</property>
+                            <child>
+                              <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf2"/>
+                              <attributes>
+                                <attribute name="stock-id">5</attribute>
+                              </attributes>
+                            </child>
+                            <child>
+                              <object class="GtkCellRendererSpin" id="cellrendererspin3"/>
+                              <attributes>
+                                <attribute name="foreground-gdk">10</attribute>
+                                <attribute name="text">3</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="price_current">
-                        <property name="sizing">fixed</property>
-                        <property name="min_width">60</property>
-                        <property name="max_width">60</property>
-                        <property name="title">Цена</property>
                         <child>
-                          <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf2"/>
-                          <attributes>
-                            <attribute name="stock-id">5</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="price_min">
+                            <property name="sizing">fixed</property>
+                            <property name="min_width">60</property>
+                            <property name="max_width">60</property>
+                            <property name="title">Мин</property>
+                            <child>
+                              <object class="GtkCellRendererSpin" id="cellrendererspin4"/>
+                              <attributes>
+                                <attribute name="text">1</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
                         <child>
-                          <object class="GtkCellRendererSpin" id="cellrendererspin3"/>
-                          <attributes>
-                            <attribute name="foreground-gdk">10</attribute>
-                            <attribute name="text">3</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="price_max">
+                            <property name="sizing">fixed</property>
+                            <property name="min_width">60</property>
+                            <property name="max_width">60</property>
+                            <property name="title">Макс</property>
+                            <child>
+                              <object class="GtkCellRendererSpin" id="cellrendererspin5"/>
+                              <attributes>
+                                <attribute name="text">2</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="price_min">
-                        <property name="sizing">fixed</property>
-                        <property name="min_width">60</property>
-                        <property name="max_width">60</property>
-                        <property name="title">Мин</property>
                         <child>
-                          <object class="GtkCellRendererSpin" id="cellrendererspin4"/>
-                          <attributes>
-                            <attribute name="text">1</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="timestamp">
+                            <property name="sizing">fixed</property>
+                            <property name="min_width">120</property>
+                            <property name="max_width">120</property>
+                            <property name="title" translatable="yes">Обновление</property>
+                            <child>
+                              <object class="GtkCellRendererSpin" id="cellrendererspin2"/>
+                              <attributes>
+                                <attribute name="foreground-gdk">9</attribute>
+                                <attribute name="text">7</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="price_max">
-                        <property name="sizing">fixed</property>
-                        <property name="min_width">60</property>
-                        <property name="max_width">60</property>
-                        <property name="title">Макс</property>
                         <child>
-                          <object class="GtkCellRendererSpin" id="cellrendererspin5"/>
-                          <attributes>
-                            <attribute name="text">2</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="timestamp">
-                        <property name="sizing">fixed</property>
-                        <property name="min_width">120</property>
-                        <property name="max_width">120</property>
-                        <property name="title" translatable="yes">Обновление</property>
-                        <child>
-                          <object class="GtkCellRendererSpin" id="cellrendererspin2"/>
-                          <attributes>
-                            <attribute name="foreground-gdk">9</attribute>
-                            <attribute name="text">7</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="isbn">
-                        <property name="resizable">True</property>
-                        <property name="title" translatable="yes">ISBN</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="cellrenderertext1"/>
-                          <attributes>
-                            <attribute name="text">11</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="isbn">
+                            <property name="resizable">True</property>
+                            <property name="title" translatable="yes">ISBN</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="cellrenderertext1"/>
+                              <attributes>
+                                <attribute name="text">11</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
                       </object>
                     </child>
                   </object>
+                  <packing>
+                    <property name="resize">False</property>
+                    <property name="shrink">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkHBox" id="box_graph">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="resize">False</property>
+                    <property name="shrink">True</property>
+                  </packing>
                 </child>
               </object>
               <packing>
@@ -225,7 +246,6 @@
           <object class="GtkHBox" id="box2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="valign">end</property>
             <child>
               <object class="GtkVBox" id="box4">
                 <property name="visible">True</property>
@@ -236,7 +256,6 @@
                   <object class="GtkLabel" id="label3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="halign">start</property>
                     <property name="label" translatable="yes">Найти:</property>
                   </object>
                   <packing>
@@ -249,7 +268,6 @@
                   <object class="GtkLabel" id="label4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="halign">start</property>
                     <property name="label" translatable="yes">Ссылка на книгу</property>
                   </object>
                   <packing>
@@ -277,6 +295,10 @@
                     <property name="can_focus">True</property>
                     <property name="invisible_char">•</property>
                     <property name="invisible_char_set">True</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -288,9 +310,12 @@
                   <object class="GtkEntry" id="tfNewLink">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hexpand">True</property>
                     <property name="invisible_char">•</property>
                     <property name="invisible_char_set">True</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -319,11 +344,11 @@
                     <child>
                       <object class="GtkButton" id="buttonFind">
                         <property name="label">gtk-find</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="related_action">actionFind</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="related_action">actionFind</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="use_stock">True</property>
                       </object>
                       <packing>
@@ -335,11 +360,11 @@
                     <child>
                       <object class="GtkButton" id="buttonFindReset">
                         <property name="label">gtk-clear</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="related_action">actionFindReset</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="related_action">actionFindReset</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="use_stock">True</property>
                       </object>
                       <packing>
@@ -363,10 +388,10 @@
                     <child>
                       <object class="GtkButton" id="buttonCheck">
                         <property name="label" translatable="yes">Проверить</property>
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="use_action_appearance">False</property>
                         <signal name="clicked" handler="onCheckButton" object="tfNewLink" swapped="no"/>
                       </object>
                       <packing>
@@ -378,10 +403,10 @@
                     <child>
                       <object class="GtkButton" id="button2">
                         <property name="label">gtk-add</property>
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="use_stock">True</property>
                       </object>
                       <packing>
@@ -489,9 +514,6 @@
       </object>
     </child>
   </object>
-  <object class="GtkTreeModelFilter" id="treemodelfilter1">
-    <property name="child_model">treestore1</property>
-  </object>
   <object class="GtkTreeStore" id="treestore1">
     <columns>
       <!-- column-name name -->
@@ -523,5 +545,8 @@
       <!-- column-name is_visible -->
       <column type="gboolean"/>
     </columns>
+  </object>
+  <object class="GtkTreeModelFilter" id="treemodelfilter1">
+    <property name="child_model">treestore1</property>
   </object>
 </interface>

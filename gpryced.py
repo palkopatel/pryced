@@ -18,19 +18,22 @@ from numpy import arange
 import matplotlib.pyplot as plt
 import matplotlib.dates
 from matplotlib.backends.backend_gtk import FigureCanvasGTK
+from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as NavigationToolbar
 import time
 import matplotlib as mpl
 
 mpl.rcParams['lines.linewidth'] = 1.5
+mpl.rcParams['lines.antialiased'] = True
 mpl.rcParams['legend.frameon'] = False
 mpl.rcParams['legend.fontsize'] = 'medium'
 mpl.rcParams['axes.grid'] = True
-#mpl.rcParams['axes.labelsize'] = 'small'
-#mpl.rcParams['axes.axisbelow'] = True
-mpl.rcParams['figure.subplot.left'] = 0.08
-mpl.rcParams['figure.subplot.right'] = 0.98
+mpl.rcParams['figure.subplot.left'] = 0.03
+mpl.rcParams['figure.subplot.bottom'] = 0.1
+mpl.rcParams['figure.subplot.right'] = 0.99
 mpl.rcParams['figure.subplot.top'] = 0.93
-mpl.rcParams['figure.subplot.hspace'] = 0.1
+
+# распечатать все названия параметров графиков
+#for param in matplotlib.rcParams.keys(): print param
 
 # номера полей в таблице с книгами
 F_NAME = 0
@@ -47,6 +50,7 @@ F_FG_PRICE_CUR = 10
 F_ISBN = 11
 F_LINK_ID = 12
 F_IS_VISIBLE = 13
+F_STATE = 14
 
 # вывод всех методов класса (иногда нужно для отладки)
 #import inspect
@@ -55,7 +59,8 @@ F_IS_VISIBLE = 13
 
 class App(object):
 
-   def onCut(widget, event):
+   def onCut(widget, action):
+      event = widget.treeview.get_selection()
       model_pre, iter_src = event.get_selected()
       try:
          # конвертировать модель и узел (для модели-фильтра)
@@ -68,10 +73,11 @@ class App(object):
       except:
          print 'no cut!'
 
-   def onPaste(widget, event):
+   def onPaste(widget, action):
          # копировать нечего
          if widget.iter_src == None:
             return
+         event = widget.treeview.get_selection()
          model_pre, iter_dest_pre = event.get_selected()
          # конвертировать модель и узел (для модели-фильтра)
          iter_dest = model_pre.convert_iter_to_child_iter(iter_dest_pre)
@@ -95,7 +101,8 @@ class App(object):
             except sqlite3.Error, e:
                print u'Ошибка при выполнении запроса:', e.args[0]
 
-   def onEditBook(widget, event):
+   def onEditBook(widget, action):
+      event = widget.treeview.get_selection()
       model_pre, iter_src_pre = event.get_selected()
       # конвертировать модель и узел (для модели-фильтра)
       widget.iter_edit = model_pre.convert_iter_to_child_iter(iter_src_pre)
@@ -158,69 +165,72 @@ class App(object):
          except:
             print u'Сбой в таблице!'
       elif len(point) == 1:
-         book_id = model.get_value(model.get_iter(point), F_BOOK_ID)
+         widget.onEditBook(None)
+         
+   def onCursorChanged(widget, treeview):
+      gtk_tree_selection = treeview.get_selection()
+      if gtk_tree_selection.count_selected_rows() > 0:
+         (model, iter_sel) = gtk_tree_selection.get_selected()
+         # брать только книги, а не ссылки
+         if len(model.get_path(iter_sel)) == 1:
+            book_id = model.get_value(iter_sel, F_BOOK_ID)
+            if widget.book_id != book_id:
+               title = model.get_value(iter_sel, F_NAME)
+               widget.update_graphs(book_id, title)
+               widget.book_id = book_id
+   
+   def update_graphs(widget, book_id, title):
+      try:
+         for ax in widget.figure.axes:
+            widget.figure.delaxes(ax)
+      except:
+          pass
+
+      cursor = widget.connect.cursor()
+      links = cursor.execute('select links.id, links.urlname \
+         from links \
+         join books on books.id=links.book\
+         where books.id=?', [book_id] )
+      ids = []
+      for link in links:
          try:
-            for ax in widget.figure.axes:
-               widget.figure.delaxes(ax)
+             site_name = link[1].split('/')[2].replace('www.', '').replace('.ru', '')
          except:
-            widget.figure = plt.figure()
-            widget.figure.autofmt_xdate()
-            widget.canvas = FigureCanvasGTK(widget.figure) # a gtk.DrawingArea
-            widget.canvas.set_size_request(800, 600)
-            #widget.canvas.mpl_connect('motion_notify_event', widget.on_drawarea)
-            widget.canvas.show()
+             site_name = link[1]
+         ids.append([link[0], site_name])
 
-            widget.builder.add_from_file("glade/book_dialog.glade")
-            widget.graph_dlg = widget.builder.get_object("book_dialog")
-            widget.graphview = widget.builder.get_object("dialog-vbox2")
-            widget.graphview.pack_start(widget.canvas, True, True)
-
-         cursor = widget.connect.cursor()
-         links = cursor.execute('select links.id, links.urlname \
-            from links \
-            join books on books.id=links.book\
-            where books.id=?', [book_id] )
-         ids = []
-         for link in links:
-            try:
-                site_name = link[1].split('/')[2].replace('www.', '').replace('.ru', '')
-            except:
-                site_name = link[1]
-            ids.append([link[0], site_name])
-
-         min_price = 0
-         cursor = widget.connect.cursor()
-         query = 'select price, timestamp \
-                  from prices where link = ? \
-                  order by timestamp desc'
-         for link in ids:
-            rows = cursor.execute( query, [link[0]] )
-            rows = cursor.fetchall()
-            x = []
-            y = []
-            for row in rows:
-               timestamp = row[1]
-               timestamp1 = datetime.datetime(*time.strptime(row[1], "%Y-%m-%d %H:%M:%S")[0:5])
-               #timestamp = matplotlib.dates.date2num(timestamp1)
-               x.append(timestamp1)
-               y.append(row[0])
-               if int(row[0]) < min_price or min_price == 0:
-                   min_price = int(row[0])
-                   min_timestamp = timestamp1
-            plt.plot(x, y, label=link[1])
-         print min_price, min_timestamp
-         plt.legend(loc='upper left')
-         plt.grid(True)
-         plt.xlabel(u'Дата')
-         plt.ylabel(u'Цена')
-         plt.title(model.get_value(model.get_iter(point), F_NAME))
+      min_price = 0
+      cursor = widget.connect.cursor()
+      query = 'select price, timestamp \
+               from prices where link = ? \
+               order by timestamp desc \
+               LIMIT 200'
+      for link in ids:
+         rows = cursor.execute( query, [link[0]] )
+         rows = cursor.fetchall()
+         x = []
+         y = []
+         for row in rows:
+            timestamp = row[1]
+            timestamp1 = datetime.datetime(*time.strptime(row[1], "%Y-%m-%d %H:%M:%S")[0:5])
+            #timestamp = matplotlib.dates.date2num(timestamp1)
+            x.append(timestamp1)
+            y.append(row[0])
+            if int(row[0]) < min_price or min_price == 0:
+                min_price = int(row[0])
+                min_timestamp = timestamp1
+         plt.plot(x, y, label=link[1])
+      print min_price, min_timestamp
+      plt.legend(loc='upper left')
+      plt.grid(True)
+      plt.xlabel(u'Дата')
+      plt.ylabel(u'Цена')
+      plt.title(title)
 #         plt.annotate('min', xy=(min_price, min_timestamp), 
 #                      xytext=(0.5,0.5),textcoords='offset points', 
 #                      arrowprops=dict(facecolor='black', shrink=0.05))
-         #plt.show()
-         widget.graph_dlg.show_all()
-         widget.graph_dlg.run()
-         widget.graph_dlg.hide_all()
+      #plt.show()
+      widget.figure.canvas.draw()
 
    def filtering(self, model, path, iter, user_data):
        # проверять "корни" дерева - книги
@@ -264,7 +274,8 @@ class App(object):
       cursor0.execute('select pr.*, ifnull(prices.price, 0) price, \
                         case pr.ptime when 0 then 0 else strftime("%Y-%m-%d", pr.ptime) end shorttime, \
                         case pr.ptime when 0 then 0 else strftime("%s", pr.ptime) end seconds, \
-                        strftime("%s", datetime("now")) now \
+                        strftime("%s", datetime("now")) now, \
+                        ifnull(links.state, 0) state \
                      from links \
                      left join (select books.id, \
                             books.isbn, \
@@ -317,6 +328,7 @@ class App(object):
       pix_labiru = gtk.gdk.pixbuf_new_from_file('pics/labiru-16.png')
       pix_bgshop = gtk.gdk.pixbuf_new_from_file('pics/bgshop-16.png')
       pix_setbook = gtk.gdk.pixbuf_new_from_file('pics/setbook-16.png')
+      hasGraph = 0
       for row in rows:
          url_name = row[3]
 #         print '====='
@@ -356,7 +368,12 @@ class App(object):
          if books_id != row[0] :
             is_visible = True
             iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible])
+#            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible, row[12]])
             books_id = row[0]
+         # на первом проходе вывести график
+         if hasGraph == 0:
+            self.update_graphs(books_id, row[2])
+            hasGraph = 1
          else:
             imin, imax, iprice, iseconds = self.model.get(iter, 
                                                           F_PRICE_MIN, 
@@ -401,6 +418,7 @@ class App(object):
                                F_UNIXSEC, long(row[10]), 
                                F_TIMESTAMP, row[9], 
                                F_FG_TIMESTAMP, None)
+#         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True, row[12]])
          self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True])
          if fg_pricecurrent != None: self.model.set(iter, F_FG_PRICE_CUR, fg_pricecurrent)
        
@@ -425,8 +443,26 @@ class App(object):
 
 #      now_day = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
       self.connect = connect_to_base()
+
+      self.graphview = self.builder.get_object("box_graph")
+      self.figure = plt.figure()
+      self.figure.autofmt_xdate()
+      self.canvas = FigureCanvasGTK(self.figure) # a gtk.DrawingArea
+      # почему-то в настройке отступ от нижнего края не устанавливается,
+      # поэтому здесь выставляю его принудительно
+      self.figure.subplots_adjust(bottom=0.1)
+#      widget.canvas.set_size_request(800, 600)
+      self.canvas.show()
+      self.toolbar = NavigationToolbar(self.canvas, self.main_window)
+      self.graphview.pack_start(self.canvas, True, True)
+      self.graphview.pack_start(self.toolbar, False, False)
+      self.book_id = -1
       
       self.loadModel()
+
+      self.toolbar.show()
+      self.figure.canvas.draw()
+
       # мне не удалось создать внятно фильтр в glade (хотя он там есть), 
       # потому что там нельзя указать колонку видимости 
       # или функцию-обработчик.
