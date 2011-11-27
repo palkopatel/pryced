@@ -16,6 +16,9 @@ import sqlite3
 import sys
 import urllib2
 #import codecs
+import Queue
+import threading
+import time # для подсчета времени сканирования ссылок
 
 try:
    from ctypes import windll
@@ -197,13 +200,49 @@ def insert_new_price_into_db(connect, results):
    connect.commit()
    print u'Цены обновлены.'
 
-def load_new_price(connect, now_day, insert_mode):
-   """ получение текущих цен для имеющихся книг
+class myThread2 (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+       while True:
+          row = queue.get()
+          result = (row, load_link(None, None, row[1], 0), self.getName())
+#          print self.getName(), row[1]
+          queue_out.put(result)
+          queue.task_done()
+
+class countThread (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.sz = 0
+    def run(self):
+       while True:
+          if self.sz < queue_out.qsize():
+              self.sz = queue_out.qsize()
+               # стереть вывод и переместиться в начало строки
+              sys.stdout.write('\r' + 5 * ' ' + '\r')
+              print(self.sz),
+              sys.stdout.flush() # допечатать вывод
+
+def run_load_new_price(connect, now_day):
+   """ получение текущих цен для имеющихся книг,
    "   сохранение цен в свою базу при insert_mode == 1
 
    """
+   # создать пучёк потоков для загрузки данных.
+   # с количеством потоков надо экспериментировать:
+   # малое количество плохо параллелиться и не загружает проц, а
+   # слишком большое количество серьёзно загружает проц и медленно освобождается
+   for i in range(25):
+      t = myThread2()
+      t.daemon = True # если True, то программа не завершится, пока не закончится выполнение потока
+      t.start()
+   # создать поток для вывод информации о статусе загрузки
+   t = countThread()
+   t.daemon = True
+   t.start()
+   # запрос ссылок из базы
    cursor = connect.cursor()
-      # перебор книг в базе
    cursor.execute('select links.id, links.urlname, books.author || ", " || books.title \
                         , ifnull(min(prices.price),0)\
                         , ifnull(max(prices.price),0)\
@@ -215,100 +254,124 @@ def load_new_price(connect, now_day, insert_mode):
                    order by books.author, books.title, links.urlname')
    rows = cursor.fetchall()
    results = []
+   # заполнить очередь, из которой потоки считываю ссылки для загрузки
    for row in rows:
-      color_sym = u''
-      color_price = -1
-      if insert_mode > 0: # получение текущей цены с сайта
-         price = load_link(connect, now_day, row[1], 0)
-         if price != 0 :
-            if price < int(row[3]): 
-               if win32 == -1:
-                  color_sym = u'\033[1;35m'
-               else:
-                  color_price = FG_RED|FG_INTENSITY|BG_BLACK
-            elif price == int(row[3]):
-               if win32 == -1:
-                  color_sym = u'\033[1;36m'
-               else:
-                  color_price = FG_CYAN|FG_INTENSITY|BG_BLACK
-      else: price = 0
-         # сокращенное название сайта с подсветкой
-      if win32 == -1:
-         if row[1].find(u'ozon.ru') > -1:
-            site = u'\033[1;46mozon.ru\033[0m: '
-         elif row[1].find(U'read.ru') > -1:
-            site = u'\033[1;43mread.ru\033[0m: '
-         elif row[1].find(U'my-shop.ru') > -1: 
-            site = u'\033[1;47mmy-shop\033[0m: '
-         elif row[1].find(U'ukazka.ru') > -1: 
-            site = u'\033[1;44mukazka \033[0m: '
-         elif row[1].find(U'bolero.ru') > -1: 
-            site = u'\033[1;45mbolero \033[0m: '
-         elif row[1].find(U'labirint.ru') > -1: 
-            site = u'\033[1;41mlabiru \033[0m: '
-         elif row[1].find(U'bgshop.ru') > -1: 
-            site = u'\033[1;41mbgshop \033[0m: '
-         elif row[1].find(U'setbook.ru') > -1: 
-            site = u'\033[1;41msetbook\033[0m: '
-         else:
-            site = u'none'
-         sys.stdout.write(site)
-         close_color = u'\033[0m'
-      else:
-         if row[1].find(u'ozon.ru') > -1:
-            site = u'ozon.ru'
-            colornum = FG_GREY|FG_INTENSITY|BG_CYAN|BG_INTENSITY
-         elif row[1].find(U'read.ru') > -1:
-            site = u'read.ru'
-            colornum = FG_GREY|FG_INTENSITY|BG_YELLOW
-         elif row[1].find(U'my-shop.ru') > -1: 
-            site = u'my-shop'
-            colornum = FG_GREY|FG_INTENSITY|BG_GREY
-         elif row[1].find(U'ukazka.ru') > -1: 
-            site = u'ukazka '
-            colornum = FG_GREY|FG_INTENSITY|BG_BLUE|BG_INTENSITY
-         elif row[1].find(U'bolero.ru') > -1: 
-            site = u'bolero '
-            colornum = FG_GREY|FG_INTENSITY|BG_MAGENTA|BG_INTENSITY
-         elif row[1].find(U'labirint.ru') > -1: 
-            site = u'labiru '
-            colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
-         elif row[1].find(U'bgshop.ru') > -1: 
-            site = u'bgshop '
-            colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
-         elif row[1].find(U'setbook.ru') > -1: 
-            site = u'setbook'
-            colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
-         else:
-            site = u'none'
-         console_color(colornum)
-         sys.stdout.write(site+u': ')
-         console_color(FG_GREY|BG_BLACK)
-         color_sym = close_color = u''
-      if win32 == -1:
-         print(row[2] + u';' + color_sym + \
-               u' сейчас: ' + unicode(str(price)) + close_color + \
-               u', минимум: ' + unicode(str(row[3])) + \
-               u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
-      else:
-         sys.stdout.write(row[2] + u';' + color_sym)
-         if color_price > 0:
-            console_color(color_price)
-         sys.stdout.write(u' сейчас: ' + unicode(str(price)) + close_color )
-         console_color(FG_GREY|BG_BLACK)
-         print(u', минимум: ' + unicode(str(row[3])) + \
-               u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
-      if insert_mode == 1:
-         if price != 0: 
-            results.insert(0, (now_day, row[0], price) )
-      else:
-         results.insert(len(results), (row[0], row[1], row[3], row[4], row[5], row[6], price) )
+       queue.put(row)
    cursor.close()
-   if insert_mode == 1 and len(results) > 0:
+   queue.join()
+   # счетчики для статистики
+   count_all = queue_out.qsize()
+   count_min = 0
+   count_zero = 0
+   count_now_min = 0
+   # обработка результатов из очереди, которыю заполнили потоки
+   results = []
+   while not queue_out.empty():
+      (row, price, thread_name) = queue_out.get()
+      queue_out.task_done()
+      if price > 0:
+         results.insert(0, (now_day, row[0], price))
+         # вывести на экран только текущие минимальные цены
+         if price <= int(row[3]) or int(row[3]) == 0:
+            print_link_info(row, price)
+            count_min += 1
+         if price < int(row[3]):
+            count_now_min += 1
+      else:
+         count_zero += 1
+   print u'Статистика:\n\tвсего ссылок:', count_all, \
+       u'\n\tв минимуме:', count_min, \
+       u'\n\tновых ссылок в минимуме:', count_now_min, \
+       u'\n\tв нуле:', count_zero, \
+       u'\n\tостальных:', (count_all - count_min - count_zero)
+   # сохранить только непустые результаты в базу   
+   if len(results) > 0:
       insert_new_price_into_db(connect, results)
-   else:
-      return results
 
+def print_link_info(row, price):
+   """ печать строки ссылки и полученной цены на экран
+
+   """
+   color_sym = u''
+   color_price = -1
+   if price != 0 :
+      if price < int(row[3]): 
+         if win32 == -1:
+            color_sym = u'\033[1;35m'
+         else:
+            color_price = FG_RED|FG_INTENSITY|BG_BLACK
+      elif price == int(row[3]):
+         if win32 == -1:
+            color_sym = u'\033[1;36m'
+         else:
+            color_price = FG_CYAN|FG_INTENSITY|BG_BLACK
+      # сокращенное название сайта с подсветкой
+   if win32 == -1:
+      if row[1].find(u'ozon.ru') > -1:
+         site = u'\033[1;46mozon.ru\033[0m: '
+      elif row[1].find(U'read.ru') > -1:
+         site = u'\033[1;43mread.ru\033[0m: '
+      elif row[1].find(U'my-shop.ru') > -1: 
+         site = u'\033[1;47mmy-shop\033[0m: '
+      elif row[1].find(U'ukazka.ru') > -1: 
+         site = u'\033[1;44mukazka \033[0m: '
+      elif row[1].find(U'bolero.ru') > -1: 
+         site = u'\033[1;45mbolero \033[0m: '
+      elif row[1].find(U'labirint.ru') > -1: 
+         site = u'\033[1;41mlabiru \033[0m: '
+      elif row[1].find(U'bgshop.ru') > -1: 
+         site = u'\033[1;41mbgshop \033[0m: '
+      elif row[1].find(U'setbook.ru') > -1: 
+         site = u'\033[1;41msetbook\033[0m: '
+      else:
+         site = u'none'
+      sys.stdout.write(site)
+      close_color = u'\033[0m'
+   else:
+      if row[1].find(u'ozon.ru') > -1:
+         site = u'ozon.ru'
+         colornum = FG_GREY|FG_INTENSITY|BG_CYAN|BG_INTENSITY
+      elif row[1].find(U'read.ru') > -1:
+         site = u'read.ru'
+         colornum = FG_GREY|FG_INTENSITY|BG_YELLOW
+      elif row[1].find(U'my-shop.ru') > -1: 
+         site = u'my-shop'
+         colornum = FG_GREY|FG_INTENSITY|BG_GREY
+      elif row[1].find(U'ukazka.ru') > -1: 
+         site = u'ukazka '
+         colornum = FG_GREY|FG_INTENSITY|BG_BLUE|BG_INTENSITY
+      elif row[1].find(U'bolero.ru') > -1: 
+         site = u'bolero '
+         colornum = FG_GREY|FG_INTENSITY|BG_MAGENTA|BG_INTENSITY
+      elif row[1].find(U'labirint.ru') > -1: 
+         site = u'labiru '
+         colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
+      elif row[1].find(U'bgshop.ru') > -1: 
+         site = u'bgshop '
+         colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
+      elif row[1].find(U'setbook.ru') > -1: 
+         site = u'setbook'
+         colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
+      else:
+         site = u'none'
+      console_color(colornum)
+      sys.stdout.write(site+u': ')
+      console_color(FG_GREY|BG_BLACK)
+      color_sym = close_color = u''
+   if win32 == -1:
+      print(row[2] + u';' + color_sym + \
+            u' сейчас: ' + unicode(str(price)) + close_color + \
+            u', минимум: ' + unicode(str(row[3])) + \
+            u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
+   else:
+      sys.stdout.write(row[2] + u';' + color_sym)
+      if color_price > 0:
+         console_color(color_price)
+      sys.stdout.write(u' сейчас: ' + unicode(str(price)) + close_color )
+      console_color(FG_GREY|BG_BLACK)
+      print(u', минимум: ' + unicode(str(row[3])) + \
+            u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
+    
 def add_new_book(connect, now_day, url_name):
    """ добавление ссылки на книгу в базу
 
@@ -330,11 +393,14 @@ def usage_message():
 
    """
    msg = u'использование: ' + \
-         unicode(sys.argv[0]) + u' {-a <ссылка на книгу> | -g | -s}' + \
-         u'\n\t-a <ссылка на книгу> - добавить книгу в базу' +\
-         u'\n\t-g - получить текущие цены и сохранить их в базу' +\
-         u'\n\t-s - показать цены из базы'
+         unicode(sys.argv[0]) + u' {-a|t <ссылка на книгу> | -g}' + \
+         u'\n\t-a <ссылка на книгу> - добавить ссылку на книгу в базу' +\
+         u'\n\t-t <ссылка на книгу> - проверить ссылку'+\
+         u'\n\t-g - получить текущие цены и сохранить их в базу'
    print msg
+
+queue = Queue.Queue()
+queue_out = Queue.Queue()
 
 if __name__ == "__main__":
    try:
@@ -350,13 +416,13 @@ if __name__ == "__main__":
             add_new_book(connect, now_day, sys.argv[2])
          elif sys.argv[1] == '-t': # проба ссылки
             test_url(sys.argv[2])
-      elif len(sys.argv) > 1 and (sys.argv[1] == '-g' or sys.argv[1] == '-s'): # добавление текущих цен в базу
+      elif len(sys.argv) > 1 and (sys.argv[1] == '-g'): # добавление текущих цен в базу
+         start = time.time()
          try:
-            if sys.argv[1] == '-g': insert_mode = 1
-            else: insert_mode = 0
-            load_new_price(connect, now_day, insert_mode)
+            run_load_new_price(connect, now_day)
          except sqlite3.Error, e:
             print u'Ошибка при выполнении:', e.args[0]
+         print u'\nВремя работы: %s\n' % (time.time() - start)
       else:
          usage_message()
       connect.close()
