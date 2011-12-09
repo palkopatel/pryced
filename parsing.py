@@ -79,7 +79,7 @@ def readru_parse_book(soup, create_flag):
    if create_flag > 0:
       title = soup.find('h1').string
          # найти таблицу с атрибутом id равным book_fields
-      table = soup.find('table', {'id':'book_fields'})
+      table = soup.find('table', {'class':'book_fields'})
       serial = ''
       isbn = ''
       for row in table.findAll('tr'): # перебрать строки
