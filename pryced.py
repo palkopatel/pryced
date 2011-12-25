@@ -101,7 +101,11 @@ def insert_new_book(connect, isbn, title, author):
    book_id = 0
    try:
       cursor = connect.cursor()
-      cursor.execute('select id from books where isbn like ?', ['%'+isbn+'%'])
+      # поиск по вхождению, т.к. некоторые сайты дают одной книге несколько ISBN
+      # (например, ozon.ru)
+      if len(isbn) > 0: param = ['%'+isbn+'%']
+      else: param = ['']
+      cursor.execute('select id from books where isbn like ?', param)
       books_data = cursor.fetchall()
       cursor.close()
       if len(books_data) > 0:
@@ -230,9 +234,8 @@ def run_load_new_price(connect, now_day):
 
    """
    # создать пучёк потоков для загрузки данных.
-   # с количеством потоков надо экспериментировать:
-   # малое количество плохо параллелиться и не загружает проц, а
-   # слишком большое количество серьёзно загружает проц и медленно освобождается
+   # с их количеством надо экспериментировать, 
+   # потому что слишком большое количество серьёзно загружает проц
    for i in range(25):
       t = myThread2()
       t.daemon = True # если True, то программа не завершится, пока не закончится выполнение потока
@@ -258,6 +261,7 @@ def run_load_new_price(connect, now_day):
    for row in rows:
        queue.put(row)
    cursor.close()
+   # приостановить выполнение пока очередь со сылками не опустеет
    queue.join()
    # счетчики для статистики
    count_all = queue_out.qsize()
@@ -273,9 +277,9 @@ def run_load_new_price(connect, now_day):
          results.insert(0, (now_day, row[0], price))
          # вывести на экран только текущие минимальные цены
          if price <= int(row[3]) or int(row[3]) == 0:
-            print_link_info(row, price)
             count_min += 1
          if price < int(row[3]):
+            print_link_info(row, price)
             count_now_min += 1
       else:
          count_zero += 1
