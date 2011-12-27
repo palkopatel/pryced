@@ -204,7 +204,7 @@ def insert_new_price_into_db(connect, results):
    connect.commit()
    print u'Цены обновлены.'
 
-class myThread2 (threading.Thread):
+class parseThread (threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
     def run(self):
@@ -227,6 +227,22 @@ class countThread (threading.Thread):
               sys.stdout.write('\r' + 5 * ' ' + '\r')
               print(self.sz),
               sys.stdout.flush() # допечатать вывод
+       print u'\n'
+
+def countLinks(connect):
+   """ получение количества ссылок на книги
+      
+   """
+   count_links = 0
+   cursor = connect.cursor()
+   cursor.execute('select count(links.id) \
+                   from links \
+                   left join books on links.book = books.id')
+   rows = cursor.fetchall()
+   for row in rows:
+       count_links = row[0]
+   cursor.close()
+   return count_links
 
 def run_load_new_price(connect, now_day):
    """ получение текущих цен для имеющихся книг,
@@ -237,13 +253,16 @@ def run_load_new_price(connect, now_day):
    # с их количеством надо экспериментировать, 
    # потому что слишком большое количество серьёзно загружает проц
    for i in range(25):
-      t = myThread2()
+      t = parseThread()
       t.daemon = True # если True, то программа не завершится, пока не закончится выполнение потока
       t.start()
    # создать поток для вывод информации о статусе загрузки
    t = countThread()
    t.daemon = True
    t.start()
+   
+   print u'Всего ссылок на книги:', countLinks(connect)
+
    # запрос ссылок из базы
    cursor = connect.cursor()
    cursor.execute('select links.id, links.urlname, books.author || ", " || books.title \
@@ -261,7 +280,7 @@ def run_load_new_price(connect, now_day):
    for row in rows:
        queue.put(row)
    cursor.close()
-   # приостановить выполнение пока очередь со сылками не опустеет
+   # приостановить выполнение пока очередь со ссылками не опустеет
    queue.join()
    # счетчики для статистики
    count_all = queue_out.qsize()
