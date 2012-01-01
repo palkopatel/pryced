@@ -369,6 +369,9 @@ def setbook_parse_book(soup, create_flag):
    try:
        # '`' - разделитель тысяч
        price = soup.find('div', attrs={'class':'row_product_price'}).string.split(u'\xa0')[0].replace('`', '')
+       # быват, что на месте цены стоит надпись 'Нет в продаже'
+       if not price.isdigit():
+           price = '0'
    except:
       price = '0'
    return (title, author, serial, isbn, '', price)
