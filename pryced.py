@@ -5,11 +5,14 @@
 # скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
 # ukazka.ru, bolero.ru, labirint.ru, bgshop.ru, setbook.ru
 
+import gettext
+gettext.install('pryced', './locale', unicode=True)
+
 try:
    from parsing import *
    from BeautifulSoup import BeautifulSoup
 except:
-   print u'Для работы нужна библиотека BeautifulSoup\n(Можно найти на сайте: http://code.google.com/p/pryced/downloads/list)\n'
+   print _(u'Need to work BeautifulSoup library.\nIt can be found at http://code.google.com/p/pryced/downloads/list\n')
    exit()
 import datetime # для datetime.datetime.now()
 import sqlite3
@@ -65,7 +68,7 @@ def connect_to_base():
         isbn text, title text, author text)')
         connect.commit()
     except sqlite3.Error, e:
-        print u'Ошибка при создании таблицы:', e.args[0]
+        print _(u'Error on create table:'), e.args[0]
     try:
         cursor.execute('create table IF NOT EXISTS links \
         (id integer primary key AUTOINCREMENT, \
@@ -75,7 +78,7 @@ def connect_to_base():
         timestamp DEFAULT current_timestamp)')
         connect.commit()
     except sqlite3.Error, e:
-        print u'Ошибка при создании таблицы:', e.args[0]
+        print _(u'Error on create table:'), e.args[0]
     try:
         cursor.execute('create table IF NOT EXISTS prices \
         (id integer primary key AUTOINCREMENT, \
@@ -83,7 +86,7 @@ def connect_to_base():
         timestamp DEFAULT current_timestamp)')
         connect.commit()
     except sqlite3.Error, e:
-        print u'Ошибка при создании таблицы:', e.args[0]
+        print _(u'Error on create table:'), e.args[0]
 
     # добавление колонки для версии без состояния
     try:
@@ -120,9 +123,9 @@ def insert_new_book(connect, isbn, title, author):
             cursor.close()
             connect.commit()
          except sqlite3.Error, e:
-            print u'Ошибка при выполнении запроса:', e.args[0]
+            print _(u'Error on query execution:'), e.args[0]
    except sqlite3.Error, e:
-      print u'Ошибка при выполнении запроса:', e.args[0]
+      print _(u'Error on query execution:'), e.args[0]
    return book_id
 
 def load_link(connect, now_day, url_name, create_flag):
@@ -137,8 +140,8 @@ def load_link(connect, now_day, url_name, create_flag):
          data = cursor.fetchall()
          cursor.close()
          if len(data) > 0:
-            print u'Ссылка на "' + data[0][0] + u'. ' + data[0][1] + \
-                  u'" уже существует в базе!'
+            print _(u'Link exists in database!')
+#            print _(u'Link on "%s. %s" exists in database!') % (data[0][0], data[0][1])
             return 0;
       if url_name.find(u'ozon.ru') > -1:
          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, create_flag)
@@ -175,20 +178,25 @@ def load_link(connect, now_day, url_name, create_flag):
                   (book_id, url_name, title, author, serial) )
                cursor.close()
                connect.commit()
-               print u'Ссылка на "' + author + u'. ' + \
-                  title + u'" добавлена в базу.'
+               print _(u'Link added in database.')
+#               print _(u'Link on "%s. %s" added in database.') % (author, title)
             except sqlite3.Error, e:
-               print u'Ошибка при выполнении запроса:', e.args[0]
+               print _(u'Error on query execution:'), e.args[0]
          else:
-               print u'Ошибка при извлечения данных о книге:' 
-               print u'title:  ' + title
-               print u'author: ' + author
-               print u'serial: ' + serial
-               print u'isbn:   ' + isbn
-               print u'price:  ' + price
-               print u'desc2:  ' + desc2
+            print _(u'Failed to parse links in the book:') 
+            try:
+               print _(u'title:  ') + title
+               print _(u'author: ') + author
+               print _(u'serial: ') + serial
+               print _(u'isbn:   ') + isbn
+               print _(u'price:  ') + price
+               print _(u'desc2:  ') + desc2
+            except Exception, e:
+               print url_name
+               print e
       return int(float(price.replace(',', '.')))
    except Exception, e:
+      print _(u'Failed to load links:'), url_name
       print e
       return 0
 
@@ -202,11 +210,12 @@ def insert_new_price_into_db(connect, results):
       cursor.execute( 'insert into prices (timestamp, link, price) values (?, ?, ?)', price )
    cursor.close()
    connect.commit()
-   print u'Цены обновлены.'
+   print _(u'Prices updated.')
 
 class parseThread (threading.Thread):
-    def __init__(self):
+    def __init__(self, npp):
         threading.Thread.__init__(self)
+        self.npp = npp
     def run(self):
        while True:
           row = queue.get()
@@ -252,8 +261,10 @@ def run_load_new_price(connect, now_day):
    # создать пучёк потоков для загрузки данных.
    # с их количеством надо экспериментировать, 
    # потому что слишком большое количество серьёзно загружает проц
-   for i in range(25):
-      t = parseThread()
+   # 25 - нормально работает на 3-Мбит соединении
+   # 10 - нормально работает на 1-Мбит соединении
+   for i in range(10):
+      t = parseThread(i)
       t.daemon = True # если True, то программа не завершится, пока не закончится выполнение потока
       t.start()
    # создать поток для вывод информации о статусе загрузки
@@ -261,7 +272,7 @@ def run_load_new_price(connect, now_day):
    t.daemon = True
    t.start()
    
-   print u'Всего ссылок на книги:', countLinks(connect)
+   print _(u'Total links is '), countLinks(connect)
 
    # запрос ссылок из базы
    cursor = connect.cursor()
@@ -302,11 +313,11 @@ def run_load_new_price(connect, now_day):
             count_now_min += 1
       else:
          count_zero += 1
-   print u'Статистика:\n\tвсего ссылок:', count_all, \
-       u'\n\tв минимуме:', count_min, \
-       u'\n\tновых ссылок в минимуме:', count_now_min, \
-       u'\n\tв нуле:', count_zero, \
-       u'\n\tостальных:', (count_all - count_min - count_zero)
+   print _(u'Stats:\n\ttotal links:'), count_all, \
+       _(u'\n\tin min:'), count_min, \
+       _(u'\n\tnew links in min:'), count_now_min, \
+       _(u'\n\tin zero:'), count_zero, \
+       _(u'\n\tothers:'), (count_all - count_min - count_zero)
    # сохранить только непустые результаты в базу   
    if len(results) > 0:
       insert_new_price_into_db(connect, results)
@@ -381,19 +392,26 @@ def print_link_info(row, price):
       sys.stdout.write(site+u': ')
       console_color(FG_GREY|BG_BLACK)
       color_sym = close_color = u''
-   if win32 == -1:
-      print(row[2] + u';' + color_sym + \
-            u' сейчас: ' + unicode(str(price)) + close_color + \
-            u', минимум: ' + unicode(str(row[3])) + \
-            u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
-   else:
-      sys.stdout.write(row[2] + u';' + color_sym)
-      if color_price > 0:
-         console_color(color_price)
-      sys.stdout.write(u' сейчас: ' + unicode(str(price)) + close_color )
-      console_color(FG_GREY|BG_BLACK)
-      print(u', минимум: ' + unicode(str(row[3])) + \
-            u', максимум: ' + unicode(str(row[4])) + u'; ' + row[1])
+   try:
+       if win32 == -1:
+          print(row[2] + u';' + color_sym + \
+                _(u' now: ') + unicode(str(price)) + close_color + \
+                _(u', min: ') + unicode(str(row[3])) + \
+                _(u', max: ') + unicode(str(row[4])) + u'; ' + row[1])
+       else:
+          sys.stdout.write(row[2] + u';' + color_sym)
+          if color_price > 0:
+             console_color(color_price)
+          sys.stdout.write(_(u' now: ') + unicode(str(price)) + close_color )
+          console_color(FG_GREY|BG_BLACK)
+          print(_(u', min: ') + unicode(str(row[3])) + \
+                _(u', max: ') + unicode(str(row[4])) + u'; ' + row[1])
+   except Exception, e:
+      try:
+         print row[1]
+      except:
+         pass
+      print e
     
 def add_new_book(connect, now_day, url_name):
    """ добавление ссылки на книгу в базу
@@ -409,17 +427,17 @@ def add_new_book(connect, now_day, url_name):
       cursor.close()
       results.insert(0, (now_day, data[0][0], price) )
       insert_new_price_into_db(connect, results)
-      print sys.argv[2] + u': цена сейчас:', str(price)
+      print sys.argv[2] + _(u': price now:'), str(price)
 
 def usage_message():
    """ сообщение о правильном использовании
 
    """
-   msg = u'использование: ' + \
-         unicode(sys.argv[0]) + u' {-a|t <ссылка на книгу> | -g}' + \
-         u'\n\t-a <ссылка на книгу> - добавить ссылку на книгу в базу' +\
-         u'\n\t-t <ссылка на книгу> - проверить ссылку'+\
-         u'\n\t-g - получить текущие цены и сохранить их в базу'
+   msg = _(u'usage: ') + \
+         unicode(sys.argv[0]) + _(u' {-a|t <link on book> | -g}') + \
+         _(u'\n\t-a <link on book> - add link im database') + \
+         _(u'\n\t-t <link on book> - check link in parser') + \
+         _(u'\n\t-g - get current prices and store their in database')
    print msg
 
 queue = Queue.Queue()
@@ -444,8 +462,8 @@ if __name__ == "__main__":
          try:
             run_load_new_price(connect, now_day)
          except sqlite3.Error, e:
-            print u'Ошибка при выполнении:', e.args[0]
-         print u'\nВремя работы: %s\n' % (time.time() - start)
+            print _(u'Runtime error:'), e.args[0]
+         print _(u'\nRunnning time is %s\n') % (time.time() - start)
       else:
          usage_message()
       connect.close()

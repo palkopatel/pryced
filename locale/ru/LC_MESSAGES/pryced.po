@@ -1,0 +1,194 @@
+# Copyright (C) palkopatel
+# FIRST AUTHOR <palkopatel@gmail.com>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2012-03-04 19:39+MSK\n"
+"PO-Revision-Date: \n"
+"Last-Translator: palkopatel <palkopatel@gmail.com>\n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Poedit-Language: Russian\n"
+"X-Poedit-Country: RUSSIAN FEDERATION\n"
+
+#: pryced.py:15
+msgid ""
+"Need to work BeautifulSoup library.\n"
+"It can be found at http://code.google.com/p/pryced/downloads/list\n"
+msgstr ""
+"Для работы нужна библиотека BeautifulSoup\n"
+"(Можно найти на сайте: http://code.google.com/p/pryced/downloads/list)\n"
+
+#: pryced.py:71
+#: pryced.py:81
+#: pryced.py:89
+msgid "Error on create table:"
+msgstr "Ошибка при создании таблицы:"
+
+#: pryced.py:126
+#: pryced.py:128
+#: pryced.py:184
+msgid "Error on query execution:"
+msgstr "Ошибка при выполнении запроса:"
+
+#: pryced.py:143
+msgid "Link exists in database!"
+msgstr "Ссылка уже существует в базе!"
+
+#: pryced.py:181
+msgid "Link added in database."
+msgstr "Ссылка добавлена в базу."
+
+#: pryced.py:186
+msgid "Failed to parse links in the book:"
+msgstr "Ошибка при извлечения данных о книге:"
+
+#: pryced.py:187
+msgid "title:  "
+msgstr "заголовок: "
+
+#: pryced.py:188
+msgid "author: "
+msgstr "автор:     "
+
+#: pryced.py:189
+msgid "serial: "
+msgstr "серия:     "
+
+#: pryced.py:190
+msgid "isbn:   "
+msgstr "isbn:      "
+
+#: pryced.py:191
+msgid "price:  "
+msgstr "цена:      "
+
+#: pryced.py:192
+msgid "desc2:  "
+msgstr "доп.инф.:  "
+
+#: pryced.py:195
+msgid "Failed to load links:"
+msgstr "Сбой на загрузке ссылки:"
+
+#: pryced.py:209
+msgid "Prices updated."
+msgstr "Цены обновлены."
+
+#: pryced.py:271
+msgid "Total links is "
+msgstr "Всего ссылок на книги:"
+
+#: pryced.py:312
+msgid ""
+"Stats:\n"
+"\ttotal links:"
+msgstr ""
+"Статистика:\n"
+"\tвсего ссылок:"
+
+#: pryced.py:313
+msgid ""
+"\n"
+"\tin min:"
+msgstr ""
+"\n"
+"\tв минимуме:"
+
+#: pryced.py:314
+msgid ""
+"\n"
+"\tnew links in min:"
+msgstr ""
+"\n"
+"\tновых ссылок в минимуме:"
+
+#: pryced.py:315
+msgid ""
+"\n"
+"\tin zero:"
+msgstr ""
+"\n"
+"\tв нуле:"
+
+#: pryced.py:316
+msgid ""
+"\n"
+"\tothers:"
+msgstr ""
+"\n"
+"\tостальных:"
+
+#: pryced.py:394
+#: pryced.py:401
+msgid " now: "
+msgstr " сейчас: "
+
+#: pryced.py:395
+#: pryced.py:403
+msgid ", min: "
+msgstr ", минимум: "
+
+#: pryced.py:396
+#: pryced.py:404
+msgid ", max: "
+msgstr ", максимум: "
+
+#: pryced.py:422
+msgid ": price now:"
+msgstr ": цена сейчас:"
+
+#: pryced.py:428
+msgid "usage: "
+msgstr "использование: "
+
+#: pryced.py:429
+msgid " {-a|t <link on book> | -g}"
+msgstr " {-a|t <ссылка на книгу> | -g}"
+
+#: pryced.py:430
+msgid ""
+"\n"
+"\t-a <link on book> - add link im database"
+msgstr ""
+"\n"
+"\t-a <ссылка на книгу> - добавить ссылку на книгу в базу"
+
+#: pryced.py:431
+msgid ""
+"\n"
+"\t-t <link on book> - check link in parser"
+msgstr ""
+"\n"
+"\t-t <ссылка на книгу> - проверить ссылку"
+
+#: pryced.py:432
+msgid ""
+"\n"
+"\t-g - get current prices and store their in database"
+msgstr ""
+"\n"
+"\t-g - получить текущие цены и сохранить их в базу"
+
+#: pryced.py:457
+msgid "Runtime error:"
+msgstr "Ошибка при выполнении:"
+
+#: pryced.py:458
+msgid ""
+"\n"
+"Runnning time is %s\n"
+msgstr ""
+"\n"
+"Время работы: %s\n"
+
+#~ msgid "Link on \""
+#~ msgstr "Ссылка на \""
+
+#~ msgid "Link on \"%s. %s\" exists in database!"
+#~ msgstr "Ссылка на \"%s. %s\" уже существует в базе!"
