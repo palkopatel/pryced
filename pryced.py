@@ -411,18 +411,18 @@ def print_link_info(row, price):
       color_sym = close_color = u''
    try:
        if win32 == -1:
-          print(row[2] + u';' + color_sym + \
-                _(u' now: ') + unicode(str(price)) + close_color + \
-                _(u', min: ') + tr_(unicode(str(row[3]))) + \
-                _(u', max: ') + tr_(unicode(str(row[4]))) + u'; ' + row[1])
+          print(tr_(row[2]) + u';' + color_sym + \
+                _(u' now: ') + unicode(price) + close_color + \
+                _(u', min: ') + unicode(row[3]) + \
+                _(u', max: ') + unicode(row[4]) + u'; ' + row[1])
        else:
-          sys.stdout.write(row[2] + u';' + color_sym)
+          sys.stdout.write(tr_(row[2]) + u';' + color_sym)
           if color_price > 0:
              console_color(color_price)
-          sys.stdout.write(_(u' now: ') + unicode(str(price)) + close_color )
+          sys.stdout.write(_(u' now: ') + unicode(price) + close_color )
           console_color(FG_GREY|BG_BLACK)
-          print(_(u', min: ') + tr_(unicode(str(row[3]))) + \
-                _(u', max: ') + tr_(unicode(str(row[4]))) + u'; ' + row[1])
+          print(_(u', min: ') + unicode(row[3]) + \
+                _(u', max: ') + unicode(row[4]) + u'; ' + row[1])
    except Exception, e:
       try:
          print row[1]
