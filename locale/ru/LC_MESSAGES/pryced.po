@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2012-03-04 19:39+MSK\n"
+"POT-Creation-Date: 2012-03-07 00:38+MSK\n"
 "PO-Revision-Date: \n"
 "Last-Translator: palkopatel <palkopatel@gmail.com>\n"
 "Language-Team: \n"
@@ -16,7 +16,7 @@ msgstr ""
 "X-Poedit-Language: Russian\n"
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 
-#: pryced.py:15
+#: pryced.py:22
 msgid ""
 "Need to work BeautifulSoup library.\n"
 "It can be found at http://code.google.com/p/pryced/downloads/list\n"
@@ -24,67 +24,67 @@ msgstr ""
 "Для работы нужна библиотека BeautifulSoup\n"
 "(Можно найти на сайте: http://code.google.com/p/pryced/downloads/list)\n"
 
-#: pryced.py:71
-#: pryced.py:81
-#: pryced.py:89
+#: pryced.py:90
+#: pryced.py:100
+#: pryced.py:108
 msgid "Error on create table:"
 msgstr "Ошибка при создании таблицы:"
 
-#: pryced.py:126
-#: pryced.py:128
-#: pryced.py:184
+#: pryced.py:145
+#: pryced.py:147
+#: pryced.py:201
 msgid "Error on query execution:"
 msgstr "Ошибка при выполнении запроса:"
 
-#: pryced.py:143
-msgid "Link exists in database!"
-msgstr "Ссылка уже существует в базе!"
+#: pryced.py:162
+msgid "Link on \"%s. %s\" exists in database!"
+msgstr "Ссылка на \"%s. %s\" уже существует в базе!"
 
-#: pryced.py:181
-msgid "Link added in database."
-msgstr "Ссылка добавлена в базу."
+#: pryced.py:199
+msgid "Link on \"%s. %s\" added in database."
+msgstr "Ссылка на \"%s. %s\" добавлена в базу."
 
-#: pryced.py:186
+#: pryced.py:203
 msgid "Failed to parse links in the book:"
 msgstr "Ошибка при извлечения данных о книге:"
 
-#: pryced.py:187
+#: pryced.py:205
 msgid "title:  "
 msgstr "заголовок: "
 
-#: pryced.py:188
+#: pryced.py:206
 msgid "author: "
 msgstr "автор:     "
 
-#: pryced.py:189
+#: pryced.py:207
 msgid "serial: "
 msgstr "серия:     "
 
-#: pryced.py:190
+#: pryced.py:208
 msgid "isbn:   "
 msgstr "isbn:      "
 
-#: pryced.py:191
+#: pryced.py:209
 msgid "price:  "
 msgstr "цена:      "
 
-#: pryced.py:192
+#: pryced.py:210
 msgid "desc2:  "
 msgstr "доп.инф.:  "
 
-#: pryced.py:195
+#: pryced.py:216
 msgid "Failed to load links:"
 msgstr "Сбой на загрузке ссылки:"
 
-#: pryced.py:209
+#: pryced.py:230
 msgid "Prices updated."
 msgstr "Цены обновлены."
 
-#: pryced.py:271
+#: pryced.py:292
 msgid "Total links is "
 msgstr "Всего ссылок на книги:"
 
-#: pryced.py:312
+#: pryced.py:333
 msgid ""
 "Stats:\n"
 "\ttotal links:"
@@ -92,7 +92,7 @@ msgstr ""
 "Статистика:\n"
 "\tвсего ссылок:"
 
-#: pryced.py:313
+#: pryced.py:334
 msgid ""
 "\n"
 "\tin min:"
@@ -100,7 +100,7 @@ msgstr ""
 "\n"
 "\tв минимуме:"
 
-#: pryced.py:314
+#: pryced.py:335
 msgid ""
 "\n"
 "\tnew links in min:"
@@ -108,7 +108,7 @@ msgstr ""
 "\n"
 "\tновых ссылок в минимуме:"
 
-#: pryced.py:315
+#: pryced.py:336
 msgid ""
 "\n"
 "\tin zero:"
@@ -116,7 +116,7 @@ msgstr ""
 "\n"
 "\tв нуле:"
 
-#: pryced.py:316
+#: pryced.py:337
 msgid ""
 "\n"
 "\tothers:"
@@ -124,34 +124,34 @@ msgstr ""
 "\n"
 "\tостальных:"
 
-#: pryced.py:394
-#: pryced.py:401
+#: pryced.py:415
+#: pryced.py:422
 msgid " now: "
 msgstr " сейчас: "
 
-#: pryced.py:395
-#: pryced.py:403
+#: pryced.py:416
+#: pryced.py:424
 msgid ", min: "
 msgstr ", минимум: "
 
-#: pryced.py:396
-#: pryced.py:404
+#: pryced.py:417
+#: pryced.py:425
 msgid ", max: "
 msgstr ", максимум: "
 
-#: pryced.py:422
+#: pryced.py:447
 msgid ": price now:"
 msgstr ": цена сейчас:"
 
-#: pryced.py:428
+#: pryced.py:453
 msgid "usage: "
 msgstr "использование: "
 
-#: pryced.py:429
+#: pryced.py:454
 msgid " {-a|t <link on book> | -g}"
 msgstr " {-a|t <ссылка на книгу> | -g}"
 
-#: pryced.py:430
+#: pryced.py:455
 msgid ""
 "\n"
 "\t-a <link on book> - add link im database"
@@ -159,7 +159,7 @@ msgstr ""
 "\n"
 "\t-a <ссылка на книгу> - добавить ссылку на книгу в базу"
 
-#: pryced.py:431
+#: pryced.py:456
 msgid ""
 "\n"
 "\t-t <link on book> - check link in parser"
@@ -167,7 +167,7 @@ msgstr ""
 "\n"
 "\t-t <ссылка на книгу> - проверить ссылку"
 
-#: pryced.py:432
+#: pryced.py:457
 msgid ""
 "\n"
 "\t-g - get current prices and store their in database"
@@ -175,11 +175,11 @@ msgstr ""
 "\n"
 "\t-g - получить текущие цены и сохранить их в базу"
 
-#: pryced.py:457
+#: pryced.py:482
 msgid "Runtime error:"
 msgstr "Ошибка при выполнении:"
 
-#: pryced.py:458
+#: pryced.py:483
 msgid ""
 "\n"
 "Runnning time is %s\n"
@@ -187,8 +187,11 @@ msgstr ""
 "\n"
 "Время работы: %s\n"
 
+#~ msgid "Link exists in database!"
+#~ msgstr "Ссылка уже существует в базе!"
+
+#~ msgid "Link added in database."
+#~ msgstr "Ссылка добавлена в базу."
+
 #~ msgid "Link on \""
 #~ msgstr "Ссылка на \""
-
-#~ msgid "Link on \"%s. %s\" exists in database!"
-#~ msgstr "Ссылка на \"%s. %s\" уже существует в базе!"

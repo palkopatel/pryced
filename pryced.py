@@ -5,6 +5,13 @@
 # скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
 # ukazka.ru, bolero.ru, labirint.ru, bgshop.ru, setbook.ru
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+try:
+   loc_is_ru_RU = locale.getlocale()[0].find('ru_RU') == 0
+except:
+   loc_is_ru_RU = False
+
 import gettext
 gettext.install('pryced', './locale', unicode=True)
 
@@ -28,6 +35,12 @@ try:
    handle = windll.kernel32.GetStdHandle(-11)
 except:
    pass
+
+try:
+   import trans
+except:
+   pass
+
 # признак запуска на windows-python
 win32 = sys.platform.find(u'win')
 # cygwin-python за window не считать!
@@ -56,6 +69,12 @@ BG_INTENSITY = 0x0080 # жирность фона
 def console_color(color):
    windll.kernel32.SetConsoleTextAttribute(handle, color)
 
+def tr_(str):
+   if loc_is_ru_RU == False:
+      return str.encode('trans')
+   return str
+
+    
 def connect_to_base():
     """ подключение к базе, создание таблиц
 
@@ -140,8 +159,7 @@ def load_link(connect, now_day, url_name, create_flag):
          data = cursor.fetchall()
          cursor.close()
          if len(data) > 0:
-            print _(u'Link exists in database!')
-#            print _(u'Link on "%s. %s" exists in database!') % (data[0][0], data[0][1])
+            print _(u'Link on "%s. %s" exists in database!') % (tr_(data[0][0]), tr_(data[0][1]))
             return 0;
       if url_name.find(u'ozon.ru') > -1:
          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, create_flag)
@@ -178,19 +196,18 @@ def load_link(connect, now_day, url_name, create_flag):
                   (book_id, url_name, title, author, serial) )
                cursor.close()
                connect.commit()
-               print _(u'Link added in database.')
-#               print _(u'Link on "%s. %s" added in database.') % (author, title)
+               print _(u'Link on "%s. %s" added in database.') % (tr_(author), tr_(title))
             except sqlite3.Error, e:
                print _(u'Error on query execution:'), e.args[0]
          else:
             print _(u'Failed to parse links in the book:') 
             try:
-               print _(u'title:  ') + title
-               print _(u'author: ') + author
-               print _(u'serial: ') + serial
-               print _(u'isbn:   ') + isbn
-               print _(u'price:  ') + price
-               print _(u'desc2:  ') + desc2
+               print _(u'title:  ') + tr_(title)
+               print _(u'author: ') + tr_(author)
+               print _(u'serial: ') + tr_(serial)
+               print _(u'isbn:   ') + tr_(isbn)
+               print _(u'price:  ') + tr_(price)
+               print _(u'desc2:  ') + tr_(desc2)
             except Exception, e:
                print url_name
                print e
@@ -396,16 +413,16 @@ def print_link_info(row, price):
        if win32 == -1:
           print(row[2] + u';' + color_sym + \
                 _(u' now: ') + unicode(str(price)) + close_color + \
-                _(u', min: ') + unicode(str(row[3])) + \
-                _(u', max: ') + unicode(str(row[4])) + u'; ' + row[1])
+                _(u', min: ') + tr_(unicode(str(row[3]))) + \
+                _(u', max: ') + tr_(unicode(str(row[4]))) + u'; ' + row[1])
        else:
           sys.stdout.write(row[2] + u';' + color_sym)
           if color_price > 0:
              console_color(color_price)
           sys.stdout.write(_(u' now: ') + unicode(str(price)) + close_color )
           console_color(FG_GREY|BG_BLACK)
-          print(_(u', min: ') + unicode(str(row[3])) + \
-                _(u', max: ') + unicode(str(row[4])) + u'; ' + row[1])
+          print(_(u', min: ') + tr_(unicode(str(row[3]))) + \
+                _(u', max: ') + tr_(unicode(str(row[4]))) + u'; ' + row[1])
    except Exception, e:
       try:
          print row[1]
