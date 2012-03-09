@@ -349,7 +349,7 @@ def setbook_parse_book(soup, create_flag):
    """ разбор страницы с setbook.ru
 
    """
-   serial = ''
+   serial = u''
    if create_flag > 0:
        try:
            title = soup.find('div', attrs={'class':'row_product_name'}).string
@@ -387,7 +387,15 @@ def test_url(url_name):
     #   if url_name.find(u'my-shop.ru') > -1:
     #      (title, author, serial, isbn, desc2, price) = myshop_parse_book2(url_name, 1)
        else:
-          f = urllib2.urlopen(url_name)
+          opener = urllib2.build_opener()
+          # 'Referer' нужен, чтобы обмануть "умные" сайты (setbook.ru), 
+          # которые умеют определять страну и дают цену не в рублях
+          opener.addheaders = [('Referer', url_name),
+            ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+            ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
+            ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
+          f = opener.open(url_name)
+#          f = urllib2.urlopen(url_name) 
           datas = f.read()
           f.close()
           soup = BeautifulSoup(datas)

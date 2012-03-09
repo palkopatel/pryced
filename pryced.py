@@ -164,7 +164,12 @@ def load_link(connect, now_day, url_name, create_flag):
       if url_name.find(u'ozon.ru') > -1:
          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, create_flag)
       else:
-         f = urllib2.urlopen(url_name) 
+         opener = urllib2.build_opener()
+         opener.addheaders = [('Referer', url_name),
+            ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+            ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
+            ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
+         f = opener.open(url_name)
          datas = f.read()
          f.close()
          soup = BeautifulSoup(datas)
