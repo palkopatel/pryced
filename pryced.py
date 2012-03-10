@@ -275,9 +275,9 @@ def countLinks(connect):
    cursor.close()
    return count_links
 
-def run_load_new_price(connect, now_day):
-   """ получение текущих цен для имеющихся книг,
-   "   сохранение цен в свою базу при insert_mode == 1
+def run_load_new_price(connect, now_day, silent_mode):
+   """ получение текущих цен для имеющихся книг
+   "   и сохранение их в базу
 
    """
    # создать пучёк потоков для загрузки данных.
@@ -290,9 +290,10 @@ def run_load_new_price(connect, now_day):
       t.daemon = True # если True, то программа не завершится, пока не закончится выполнение потока
       t.start()
    # создать поток для вывод информации о статусе загрузки
-   t = countThread()
-   t.daemon = True
-   t.start()
+   if silent_mode == False:
+      t = countThread()
+      t.daemon = True
+      t.start()
    
    print _(u'Total links is '), countLinks(connect)
 
@@ -479,10 +480,12 @@ if __name__ == "__main__":
             add_new_book(connect, now_day, sys.argv[2])
          elif sys.argv[1] == '-t': # проба ссылки
             test_url(sys.argv[2])
-      elif len(sys.argv) > 1 and (sys.argv[1] == '-g'): # добавление текущих цен в базу
+      elif len(sys.argv) > 1 and (sys.argv[1] == '-g' or sys.argv[1] == '-G'): # добавление текущих цен в базу
          start = time.time()
          try:
-            run_load_new_price(connect, now_day)
+            if sys.argv[1] == '-G': silent_mode = True
+            else: silent_mode = False
+            run_load_new_price(connect, now_day, silent_mode)
          except sqlite3.Error, e:
             print _(u'Runtime error:'), e.args[0]
          print _(u'\nRunnning time is %s\n') % (time.time() - start)
