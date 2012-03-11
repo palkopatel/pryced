@@ -6,7 +6,6 @@
 # ukazka.ru, bolero.ru, labirint.ru, bgshop.ru, setbook.ru
 
 import locale
-locale.setlocale(locale.LC_ALL, "")
 try:
    loc_is_ru_RU = locale.getlocale()[0].find('ru_RU') == 0
 except:
