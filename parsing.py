@@ -323,7 +323,7 @@ def bgshop_parse_book(soup, create_flag):
    product = soup.find('div', attrs={'id':'ctl00_cph_ucGoodCard_pnl_card'})
    if create_flag > 0:
        try:
-           title = product.find('span', attrs={'class':'title'}).find('b').string
+           title = product.find('span', attrs={'class':'title'}).string
        except:
            title = u''
        try:
