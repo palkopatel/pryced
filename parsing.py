@@ -377,6 +377,55 @@ def setbook_parse_book(soup, create_flag):
       price = u'0'
    return (title, author, serial, isbn, u'', price)
 
+def knigaru_parse_book(soup, create_flag):
+   """ разбор страницы с kniga.ru
+
+   """
+   serial = u''
+   title = u''
+   author = u''
+   isbn = u''
+   desc2 = u''
+   productDescription = soup.find('div', attrs={'id':'productDescription'})
+   if create_flag > 0:
+       try:
+           title = productDescription.find('h1').string
+       except:
+           title = u''
+       try:
+           author = productDescription.find('span', attrs={'id':'authorsList'}).find('a').string
+       except:
+           author = u''
+       properties = productDescription.find('div', attrs={'id':'properties'})
+
+       # извлечь цену из определенно отформатированной ячейки
+       fields = properties.findAll('p')
+       for row in fields:
+          try:
+              row_str = row.find('span', attrs={'class':'fieldName'}).string
+              try:
+                 if row_str.find(U'ISBN:') > -1:
+                    isbn = row.contents[1].strip()
+              except:
+                 pass
+              try:
+                 if row_str.find(U'Серия:') > -1:
+                    serial = row.find('a').string
+              except:
+                 pass
+          except:
+             continue
+   try:
+       buyArea = productDescription.find('div', attrs={'id':'buyArea'})
+       price = buyArea.find('p', attrs={'id':'normalPrice'}).find('span').string
+       try:
+           desc2 = buyArea.find('p', attrs={'class':'normalPrice'}).find('span').string.split(' ')[0]
+       except:
+           pass
+   except:
+      price = u'0'
+   return (title, author, serial, isbn, desc2, price)
+
 def test_url(url_name):
    """ функция для тестирования (запуск с аргументом -t <ссылка>)
 
@@ -413,6 +462,8 @@ def test_url(url_name):
              (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, 1)
           elif url_name.find(u'setbook.ru') > -1:
              (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, 1)
+          elif url_name.find(u'kniga.ru') > -1:
+             (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, 1)
        print u'title:  ' + tr_(title)
        print u'author: ' + tr_(author)
        print u'serial: ' + tr_(serial)
