@@ -152,7 +152,7 @@ def load_link(connect, now_day, url_name, create_flag):
    try:
       if create_flag > 0:
          cursor = connect.cursor()
-            # проверить нет ли уже такой ссылки в базе
+         # проверить нет ли уже такой ссылки в базе
          cursor.execute('select author, title from links where urlname like ?',\
                         ['%'+url_name+'%'])
          data = cursor.fetchall()
@@ -160,36 +160,38 @@ def load_link(connect, now_day, url_name, create_flag):
          if len(data) > 0:
             print _(u'Link on "%s. %s" exists in database!') % (tr_(data[0][0]), tr_(data[0][1]))
             return 0;
+#      if url_name.find(u'ozon.ru') > -1:
+#         (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, create_flag)
+#      else:
+      opener = urllib2.build_opener()
+      opener.addheaders = [('Referer', url_name),
+         ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+         ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
+         ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
+      f = opener.open(url_name)
+      datas = f.read()
+      f.close()
+      soup = BeautifulSoup(datas)
       if url_name.find(u'ozon.ru') > -1:
-         (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, create_flag)
+         (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, create_flag)
+      if url_name.find(u'read.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
+      elif url_name.find(u'my-shop.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
+      elif url_name.find(u'ukazka.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
+      elif url_name.find(u'bolero.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
+      elif url_name.find(u'labirint.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, create_flag)
+      elif url_name.find(u'bgshop.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, create_flag)
+      elif url_name.find(u'setbook.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, create_flag)
+      elif url_name.find(u'kniga.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, create_flag)
       else:
-         opener = urllib2.build_opener()
-         opener.addheaders = [('Referer', url_name),
-            ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
-            ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
-            ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
-         f = opener.open(url_name)
-         datas = f.read()
-         f.close()
-         soup = BeautifulSoup(datas)
-         if url_name.find(u'read.ru') > -1: 
-            (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
-         elif url_name.find(u'my-shop.ru') > -1: 
-            (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
-         elif url_name.find(u'ukazka.ru') > -1: 
-            (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
-         elif url_name.find(u'bolero.ru') > -1: 
-            (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
-         elif url_name.find(u'labirint.ru') > -1:
-            (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, create_flag)
-         elif url_name.find(u'bgshop.ru') > -1:
-            (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, create_flag)
-         elif url_name.find(u'setbook.ru') > -1:
-            (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, create_flag)
-         elif url_name.find(u'kniga.ru') > -1:
-            (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, create_flag)
-         else:
-            return 0
+         return 0
       if create_flag > 0:
          # в desc2 возвращается в случае фатальной ошибки загрузки
          if desc2 != None:

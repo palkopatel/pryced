@@ -26,8 +26,38 @@ def convert_author_string(author_raw):
       pass
    return author
 
-def ozonru_parse_book(url_name, create_flag):
+def ozonru_parse_book(soup, create_flag):
    """ разбор страницы с ozon.ru
+
+   """
+   title = author = serial = isbn = u''
+   if create_flag > 0:
+      content = soup.find('div', {'class':'l l-content'})
+      title = content.find('h1', {'itemprop':'name'}).string
+      product = content.find('div', {'class':'product-detail'})
+      for cell in product.findAll('p'):
+         try:
+            print cell.contents[0].encode('utf-8')
+            if cell.contents[0].find(U'ISBN') > -1:
+               # в ISBN еще зачем-то записан год. его надо убрать
+               isbn = cell.string.split(';')[0]
+               if isbn.find('ISBN') == 0: # удалить текст в начале строки и убрать пробелы
+                  isbn = isbn[4:].strip()
+            elif cell.contents[0].find(U'Автор') > -1:
+               author = cell.contents[1].string
+            elif cell.contents[0].find(U'Серия') > -1:
+               serial = cell.contents[1].string
+         except:
+            pass
+   try:
+      price = soup.find('span', {'itemprop':'price'}).string.split('.')[0]
+   except:
+      price = u'0'
+   print '\n\n'
+   return (title, author, serial, isbn, u'', price)
+
+def ozonru_parse_book_with_api(url_name, create_flag):
+   """ разбор страницы с ozon.ru через API
 
    """
    title = u''
@@ -431,39 +461,41 @@ def test_url(url_name):
 
    """
    try:
-       if url_name.find(u'ozon.ru') > -1:
-          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, 1)
+    #   if url_name.find(u'ozon.ru') > -1:
+    #      (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, 1)
     #   if url_name.find(u'my-shop.ru') > -1:
     #      (title, author, serial, isbn, desc2, price) = myshop_parse_book2(url_name, 1)
-       else:
-          opener = urllib2.build_opener()
-          # 'Referer' нужен, чтобы обмануть "умные" сайты (setbook.ru), 
-          # которые умеют определять страну и дают цену не в рублях
-          opener.addheaders = [('Referer', url_name),
-            ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
-            ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
-            ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
-          f = opener.open(url_name)
+    #   else:
+       opener = urllib2.build_opener()
+       # 'Referer' нужен, чтобы обмануть "умные" сайты (setbook.ru), 
+       # которые умеют определять страну и дают цену не в рублях
+       opener.addheaders = [('Referer', url_name),
+         ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+         ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
+         ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
+       f = opener.open(url_name)
 #          f = urllib2.urlopen(url_name) 
-          datas = f.read()
-          f.close()
-          soup = BeautifulSoup(datas)
-          if url_name.find(u'read.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
-          elif url_name.find(u'my-shop.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
-          elif url_name.find(u'ukazka.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
-          elif url_name.find(u'bolero.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
-          elif url_name.find(u'labirint.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, 1)
-          elif url_name.find(u'bgshop.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, 1)
-          elif url_name.find(u'setbook.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, 1)
-          elif url_name.find(u'kniga.ru') > -1:
-             (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, 1)
+       datas = f.read()
+       f.close()
+       soup = BeautifulSoup(datas)
+       if url_name.find(u'ozon.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, 1)
+       if url_name.find(u'read.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
+       elif url_name.find(u'my-shop.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
+       elif url_name.find(u'ukazka.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
+       elif url_name.find(u'bolero.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
+       elif url_name.find(u'labirint.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, 1)
+       elif url_name.find(u'bgshop.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, 1)
+       elif url_name.find(u'setbook.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, 1)
+       elif url_name.find(u'kniga.ru') > -1:
+          (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, 1)
        print u'title:  ' + tr_(title)
        print u'author: ' + tr_(author)
        print u'serial: ' + tr_(serial)
