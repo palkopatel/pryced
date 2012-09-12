@@ -174,7 +174,7 @@ def load_link(connect, now_day, url_name, create_flag):
       soup = BeautifulSoup(datas)
       if url_name.find(u'ozon.ru') > -1:
          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, create_flag)
-      if url_name.find(u'read.ru') > -1: 
+      elif url_name.find(u'read.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
       elif url_name.find(u'my-shop.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
