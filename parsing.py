@@ -37,7 +37,6 @@ def ozonru_parse_book(soup, create_flag):
       product = content.find('div', {'class':'product-detail'})
       for cell in product.findAll('p'):
          try:
-            print cell.contents[0].encode('utf-8')
             if cell.contents[0].find(U'ISBN') > -1:
                # в ISBN еще зачем-то записан год. его надо убрать
                isbn = cell.string.split(';')[0]
@@ -53,7 +52,6 @@ def ozonru_parse_book(soup, create_flag):
       price = soup.find('span', {'itemprop':'price'}).string.split('.')[0]
    except:
       price = u'0'
-   print '\n\n'
    return (title, author, serial, isbn, u'', price)
 
 def ozonru_parse_book_with_api(url_name, create_flag):
