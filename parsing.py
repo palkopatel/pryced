@@ -52,6 +52,7 @@ def ozonru_parse_book(soup, create_flag):
       price = soup.find('span', {'itemprop':'price'}).string.split('.')[0]
    except:
       price = u'0'
+
    return (title, author, serial, isbn, u'', price)
 
 def ozonru_parse_book_with_api(url_name, create_flag):
@@ -308,13 +309,13 @@ def labiru_parse_book(soup, create_flag):
    product = soup.find('div', attrs={'id':'product-specs'})
    if create_flag > 0:
       try:
-         #<div class="isbn smallbr">ISBN: 978-5-89059-155-5</div>
-         isbn = product.find('div', attrs={'class':'isbn smallbr'}).string.split(': ')[1]
+         #<div class="isbn">ISBN: 978-5-89059-155-5</div>
+         isbn = product.find('div', attrs={'class':'isbn'}).string.split(': ')[1]
       except:
          isbn = ''
       try:
-         #<div class="">
-         nonames = product.find('div', attrs={'class':''})
+         #<div class="authors">
+         nonames = product.find('div', attrs={'class':'authors'})
          author = nonames.find('a').string
       except:
          author = ''
@@ -329,14 +330,15 @@ def labiru_parse_book(soup, create_flag):
       author = u''
       isbn = u''
    try:
-      #<div class="availibility">Наличие: <span class="rang-expected">Ожидается</span></div>
-      #<div class="availibility">Наличие: <span class="rang-available">На складе</span></div>
-      availibility = product.find('div', attrs={'class':'availibility'})
-      available = availibility.find('span', attrs={'class':'rang-available'})
+      #<div class="prodtitle-availibility rang-available"><span>На складе</span></div>
+      #<div class="prodtitle-availibility rang-expected"><span>Ожидается</span></div>
+      availibility = soup.find('div', attrs={'class':'prodtitle-availibility rang-available'})
+      if availibility == None:
+         availibility = soup.find('div', attrs={'class':'prodtitle-availibility rang-expected'})
+      available = availibility.find('span')
       if available != None:
-         #<div class='price_num'>Цена <span class="value">680</span> руб.</div>
-         price_div = product.find('div', attrs={'class':'price_num'})
-         price = price_div.find('span', attrs={'class':'value'}).string
+         #<span class="buying-price-val-number">399</span> 
+         price = product.find('span', attrs={'class':'buying-price-val-number'}).string
       else:
          price = u'0'
    except:
