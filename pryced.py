@@ -180,8 +180,8 @@ def load_link(connect, now_day, url_name, create_flag):
          (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
       elif url_name.find(u'ukazka.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
-#      elif url_name.find(u'bolero.ru') > -1: 
-#         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
+      elif url_name.find(u'bolero.ru') > -1: 
+         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
       elif url_name.find(u'labirint.ru') > -1:
          (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, create_flag)
       elif url_name.find(u'bgshop.ru') > -1:
@@ -271,7 +271,9 @@ def countLinks(connect):
    cursor = connect.cursor()
    cursor.execute('select count(links.id) \
                    from links \
-                   left join books on links.book = books.id')
+                   left join books on links.book = books.id\
+                   where links.urlname not like "%bolero.ru%" \
+                   ')
    rows = cursor.fetchall()
    for row in rows:
        count_links = row[0]
@@ -309,6 +311,7 @@ def run_load_new_price(connect, now_day, silent_mode):
                    from links \
                    left join prices on links.id = prices.link \
                    left join books on links.book = books.id \
+                   where links.urlname not like "%bolero.ru%" \
                    group by links.id, links.author, links.title \
                    order by books.author, books.title, links.urlname')
    rows = cursor.fetchall()
