@@ -180,8 +180,8 @@ def load_link(connect, now_day, url_name, create_flag):
          (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
       elif url_name.find(u'ukazka.ru') > -1: 
          (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
-      elif url_name.find(u'bolero.ru') > -1: 
-         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
+#      elif url_name.find(u'bolero.ru') > -1: 
+#         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
       elif url_name.find(u'labirint.ru') > -1:
          (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, create_flag)
       elif url_name.find(u'bgshop.ru') > -1:
