@@ -34,20 +34,12 @@ def ozonru_parse_book(soup, create_flag):
    if create_flag > 0:
       content = soup.find('div', {'class':'l l-content'})
       title = content.find('h1', {'itemprop':'name'}).string
-      product = content.find('div', {'class':'product-detail'})
-      for cell in product.findAll('p'):
-         try:
-            if cell.contents[0].find(U'ISBN') > -1:
-               # в ISBN еще зачем-то записан год. его надо убрать
-               isbn = cell.string.split(';')[0]
-               if isbn.find('ISBN') == 0: # удалить текст в начале строки и убрать пробелы
-                  isbn = isbn[4:].strip()
-            elif cell.contents[0].find(U'Автор') > -1:
-               author = cell.contents[1].string
-            elif cell.contents[0].find(U'Серия') > -1:
-               serial = cell.contents[1].string
-         except:
-            pass
+      # в ISBN еще зачем-то записан год. его надо убрать
+      # в общем виде ISBN выглядит так {ISBN<нужное значение>; год}
+      isbn = content.find('p', {'itemprop':'isbn'}).string.split(';')[0]
+      if isbn.find('ISBN') == 0: # удалить текст в начале строки и убрать пробелы
+         isbn = isbn[4:].strip()
+      author = content.find('p', {'itemprop':'author'}).find('a').string
    try:
       price = soup.find('span', {'itemprop':'price'}).string.split('.')[0]
    except:
