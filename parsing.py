@@ -32,66 +32,25 @@ def ozonru_parse_book(soup, create_flag):
    """
    title = author = serial = isbn = u''
    if create_flag > 0:
-      content = soup.find('div', {'class':'l l-content'})
-      title = content.find('h1', {'itemprop':'name'}).string
+      content = soup.find('div', {'class':'bContentBlock'})
+      title = content.find('h1', {'itemprop':'name'}).string.strip()
       # в ISBN еще зачем-то записан год. его надо убрать
       # в общем виде ISBN выглядит так {ISBN<нужное значение>; год}
-      isbn = content.find('p', {'itemprop':'isbn'}).string.split(';')[0]
+      isbn = content.find('p', {'itemprop':'isbn'}).string.split(';')[0].strip()
       if isbn.find('ISBN') == 0: # удалить текст в начале строки и убрать пробелы
          isbn = isbn[4:].strip()
-      author = content.find('p', {'itemprop':'author'}).find('a').string
+      try:
+         author = content.find('p', {'itemprop':'author'}).find('a').string
+      except:
+         # автора нет
+         pass
    try:
-      price = soup.find('span', {'itemprop':'price'}).string.split('.')[0]
+      content = soup.find('div', {'class':'bSaleColumn'})
+      price = content.find('span', {'itemprop':'price'}).string.split('.')[0]
    except:
       price = u'0'
 
    return (title, author, serial, isbn, u'', price)
-
-def ozonru_parse_book_with_api(url_name, create_flag):
-   """ разбор страницы с ozon.ru через API
-
-   """
-   title = u''
-   author = u''
-   isbn = u''
-   serial = u''
-   desc2 = u''
-
-   list0=url_name.split('/')
-   if( list0[len(list0)-1] == ''): id=list0[len(list0)-2]
-   else: id=list0[len(list0)-1]
-
-   if create_flag > 0:
-      url_name='http://www.ozon.ru/webservices/OzonWebSvc.asmx/ItemDetail?ID='+id
-      f = urllib2.urlopen(url_name)
-      datas = f.read()
-      f.close()
-      soup = BeautifulSoup(datas)
-      try:
-         title = soup.find('name').string
-         author = soup.find('author').string
-         isbn = soup.find('isbn').string
-      except:
-         desc2 = None
-      if title == None: title = u'-'
-      if author == None: author = u'-'
-      else: author = convert_author_string(author)
-      if isbn == None: isbn = u'-'
-
-   url_name='http://www.ozon.ru/webservices/OzonWebSvc.asmx/ItemInfo?ID='+id
-   f = urllib2.urlopen(url_name)
-   datas = f.read()
-   f.close()
-   soup = BeautifulSoup(datas)
-   try:
-      price = soup.find('price').string.split('.')[0]
-      availability = soup.find('availability').string
-      # не нашел признака отсутствия книги кроме этого тектового поля
-      if availability.find(U'Товар отсутствует') != -1:
-         price = u'0'
-   except:
-      price = u'0'
-   return (title, author, serial, isbn, desc2, price)
 
 def readru_parse_book(soup, create_flag):
    """ разбор страницы с read.ru
