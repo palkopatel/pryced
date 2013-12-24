@@ -273,6 +273,7 @@ def countLinks(connect):
                    from links \
                    left join books on links.book = books.id\
                    where links.urlname not like "%bolero.ru%" \
+                     and links.urlname not like "%bgshop.ru%" \
                    ')
    rows = cursor.fetchall()
    for row in rows:
@@ -312,6 +313,7 @@ def run_load_new_price(connect, now_day, silent_mode):
                    left join prices on links.id = prices.link \
                    left join books on links.book = books.id \
                    where links.urlname not like "%bolero.ru%" \
+                     and links.urlname not like "%bgshop.ru%" \
                    group by links.id, links.author, links.title \
                    order by books.author, books.title, links.urlname')
    rows = cursor.fetchall()
