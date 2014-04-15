@@ -190,6 +190,8 @@ def load_link(connect, now_day, url_name, create_flag):
          (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, create_flag)
       elif url_name.find(u'kniga.ru') > -1:
          (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, create_flag)
+      elif url_name.find(u'books.ru') > -1:
+         (title, author, serial, isbn, desc2, price) = booksru_parse_book(soup, create_flag)
       else:
          return 0
       if create_flag > 0:
@@ -390,6 +392,8 @@ def print_link_info(row, price):
          site = u'\033[1;41msetbook\033[0m: '
       elif row[1].find(U'kniga.ru') > -1: 
          site = u'\033[1;41mknigaru\033[0m: '
+      elif row[1].find(U'books.ru') > -1: 
+         site = u'\033[1;41mbooksru\033[0m: '
       else:
          site = u'none'
       sys.stdout.write(site)
@@ -421,6 +425,9 @@ def print_link_info(row, price):
          colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
       elif row[1].find(U'kniga.ru') > -1: 
          site = u'knigaru'
+         colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
+      elif row[1].find(U'books.ru') > -1: 
+         site = u'booksru'
          colornum = FG_GREY|FG_INTENSITY|BG_RED|BG_INTENSITY
       else:
          site = u'none'
