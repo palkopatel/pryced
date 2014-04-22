@@ -182,8 +182,7 @@ def ukazka_parse_book(soup, create_flag):
 
    """
    if create_flag > 0:
-      #  найти тег h1 с определенным атрибутом class
-      title = soup.find('h1', attrs={'class':'bot_pad0'}).string
+      title = soup.find('h1').string
       if title[len(title)-1]=='.':
          title = title[0:-1]
       #  найти теги div с определенным атрибутом class
@@ -207,7 +206,7 @@ def ukazka_parse_book(soup, create_flag):
       serial = u''
       isbn = u''
    try:
-      price = soup.find('span', attrs={'class':'price'}).string.split('&nbsp;')[0]
+      price = soup.find('span', attrs={'class':'price'}).contents[0]
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
