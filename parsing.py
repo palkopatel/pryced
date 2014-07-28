@@ -82,22 +82,23 @@ def myshop_parse_book(soup, create_flag):
 
    """
    if create_flag > 0:
-      # извлечь теги 'td' без атрибутов, в каждом найти контекст со словом 'Серия'
-      try:
-         serial = u''
-         td2 = soup.findAll(lambda tag: len(tag.attrs) == 0 and tag.name == 'td')
-         for td2_row in td2:
-            i = 0
-            for cnt in td2_row.contents:
-               i += 1
-               try:
-                  if cnt.find(U'Серия') > -1:
-                     serial = td2_row.contents[i].string
-                     break
-               except:
-                  pass
-      except:
-         serial = ''
+      serial = u''
+#      # извлечь теги 'td' без атрибутов, в каждом найти контекст со словом 'Серия'
+#      try:
+#         serial = u''
+#         td2 = soup.findAll(lambda tag: len(tag.attrs) == 0 and tag.name == 'td')
+#         for td2_row in td2:
+#            i = 0
+#            for cnt in td2_row.contents:
+#               i += 1
+#               try:
+#                  if cnt.find(U'Серия') > -1:
+#                     serial = td2_row.contents[i].string
+#                     break
+#               except:
+#                  pass
+#      except:
+#         serial = u''
 
       try:
          title_tag = soup.find('title').string.split(' | ')
@@ -109,11 +110,11 @@ def myshop_parse_book(soup, create_flag):
          title = u''
 
       # извлечь теги span, найти среди них содержащий слово 'ISBN'
-      isbn = ''
+      isbn = u''
       span = soup.findAll('span', attrs={'class':'small1'})
       for span_row in span:
          # случай явного указания автора
-         if len(span_row.contents) == 1:
+         if span_row != None and len(span_row.contents) == 1:
             if span_row.string != None and span_row.string.find(U'ISBN') > -1:
                isbn = span_row.string.split(': ')[1]
    else:
@@ -126,7 +127,7 @@ def myshop_parse_book(soup, create_flag):
    td = soup.find('td', attrs={'class':'bgcolor_2 list_border'})
 
    noindex_cnx = td.find('noindex')
-   if len(noindex_cnx.contents) > 0:
+   if noindex_cnx != None and len(noindex_cnx.contents) > 0:
       for line in noindex_cnx.contents:
          if line.find(u'в наличии') > -1:
             b = td.find('b')
