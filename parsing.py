@@ -59,58 +59,17 @@ def readru_parse_book(soup, create_flag):
    title = author = serial = isbn = u''
    if create_flag > 0:
       title = soup.find('h1').string
-         # найти таблицу с атрибутом id равным book_fields
-      table = soup.find('table', {'class':'book_fields'})
-      serial = u''
-      isbn = u''
-      for row in table.findAll('tr'): # перебрать строки
-         for cell in row.findAll('td', {'class':'f'}): # перебрать ячейки в строке
-            if cell.string.find(U'Автор') > -1: # найти ячейку с именем автора
-               author = row.find('a').string
-            elif cell.string.find(U'Серия') > -1: # найти ячейку с названием серии
-               serial = row.find('a').string
-            elif cell.string.find(U'ISBN') > -1: # найти ячейку с ISBN
-               # старый способ извлечение ISBN, который перестал работать 01-03-2011
-               # примерно с середины июня 2011 этот способ снова работает
-               isbn = row.contents[3].string.replace("\t", "").replace("\n", "").replace("\r", "")
-               continue
-               # ISBN спрятали в картинке. надо ее загрузить и распознать
-               # 1) сначала получить ссылку
-               piclink = row.contents[3].find('img')['src']
-               # 2) загрузить картинку
-               urlpic = urllib2.urlopen('http://read.ru' + piclink)
-               localFile = open('tmp~', 'wb')
-               localFile.write(urlpic.read())
-               localFile.close()
-               # 3) распознать картинку с помощью gocr
-               try:
-                  p1 = subprocess.Popen(["pngtopnm", 'tmp~'], stdout=subprocess.PIPE)
-               except OSError, e:
-                 if e.errno == 2:
-                    print(u'\033[31mДля обработки ISBN надо установить пакет "netpbm" с утилитой "pngtopnm!"\033[0m')
-                 else:
-                    print e
-                 break
-               try:
-                  p2 = subprocess.Popen(["gocr", "-"], stdin=p1.stdout, stdout=subprocess.PIPE)
-               except OSError, e:
-                 if e.errno == 2:
-                    print(u'\033[31mДля распознавания ISBN надо установить пакет "gocr"!"\033[0m')
-                 else:
-                    print e
-                 break
-               p1.stdout.close()
-               output = p2.communicate()[0]
-               # срезать в выводе "лишние" символы
-               isbn = output.replace(" ", "").replace("\n", "")
-         else:
-            continue
-         break
+      table = soup.find('table', {'id':'book_fields_1'})
+      author = table.find('td', {'class':'author'}).find('a').string
+      isbn = table.find('td', {'class':'isbn'}).find('span').string
+      try:
+         serial = table.find('td', {'class':'series'}).find('a').string
+      except:
+         serial = u''
    try:
-      price_tag = soup.find('span', {'class':'price '})
-      pos_end = price_tag.renderContents().find('<')
-      price = price_tag.renderContents()[0:pos_end]
-      price = price.replace('&nbsp;', '')
+      table = soup.find('table', {'id':'book_fields_3'})
+      price_tag = table.find('span', {'class':'price'})
+      price = price_tag.contents[0].strip()
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
