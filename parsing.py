@@ -60,8 +60,11 @@ def readru_parse_book(soup, create_flag):
    if create_flag > 0:
       title = soup.find('h1').string
       table = soup.find('table', {'id':'book_fields_1'})
-      author = table.find('td', {'class':'author'}).find('a').string
       isbn = table.find('td', {'class':'isbn'}).find('span').string
+      try:
+         author = table.find('td', {'class':'author'}).find('a').string
+      except:
+         author = u''
       try:
          serial = table.find('td', {'class':'series'}).find('a').string
       except:
