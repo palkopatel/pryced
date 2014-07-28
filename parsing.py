@@ -152,7 +152,7 @@ def myshop_parse_book(soup, create_flag):
       for span_row in span:
          # случай явного указания автора
          if len(span_row.contents) == 1:
-            if span_row.string.find(U'ISBN') > -1:
+            if span_row.string != None and span_row.string.find(U'ISBN') > -1:
                isbn = span_row.string.split(': ')[1]
    else:
       title = u''
@@ -160,21 +160,18 @@ def myshop_parse_book(soup, create_flag):
       serial = u''
       isbn = u''
    # извлечь цену из определенно отформатированной ячейки
-   b = soup.findAll('b')
-   not_have = 0
-   for price_row in b:
-      price_row_str = price_row.string
-      try:
-         if price_row_str.find(U'Цена:') > -1:
-            price = price_row_str.split('&nbsp;')[1]
-         if price_row_str.find(U'Сообщить о поступлении в продажу') > -1:
-            not_have = 1
-      except:
-         price = u'0'
-         continue
-   # изощренный способ определения наличия книги
-   if not_have == 1:
-       price = u'0'
+   price = u'0'
+   td = soup.find('td', attrs={'class':'bgcolor_2 list_border'})
+
+   noindex_cnx = td.find('noindex')
+   if len(noindex_cnx.contents) > 0:
+      for line in noindex_cnx.contents:
+         if line.find(u'в наличии') > -1:
+            b = td.find('b')
+            if b != None:
+               price = b.string.split('&nbsp;')[0]
+            break
+
    return (title, author, serial, isbn, u'', price)
 
 def ukazka_parse_book(soup, create_flag):
