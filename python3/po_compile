@@ -1,3 +1,0 @@
-#!/bin/sh
-
-/usr/lib/python2.7/Tools/i18n/msgfmt.py -o ./locale/ru/LC_MESSAGES/pryced.mo ./locale/ru/LC_MESSAGES/pryced.po
