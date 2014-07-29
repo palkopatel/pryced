@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8
 
 import sys
@@ -39,8 +39,8 @@ def console_color(color):
 
 if sys.platform.find(u'win') == -1:
    for i in range(31,48):
-      print u'\033[' + unicode(str(i)) + u'mtest' + unicode(str(i)) + u'\033[0m' +\
-         u'\033[' + unicode(str(60+i)) + u'mtest' + unicode(str(60+i)) + u'\033[0m'
+      print (u'\033[' + unicode(str(i)) + u'mtest' + unicode(str(i)) + u'\033[0m' +\
+         u'\033[' + unicode(str(60+i)) + u'mtest' + unicode(str(60+i)) + u'\033[0m')
 else:
    console_color(BG_BLACK)
    for i in range(0,7):
@@ -54,4 +54,5 @@ else:
       console_color(i<<4|BG_INTENSITY)
       sys.stdout.write(u' bitest')
       console_color(FG_GREY|BG_BLACK)
-      print u' normal'
+      print (u' normal')
+

@@ -1,11 +1,12 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8
 
 # разбор html-кода в поисках характеристик книги
 
-from BeautifulSoup import BeautifulSoup
-import urllib2
+from bs4 import BeautifulSoup
+import urllib.request
 import subprocess
+import re
 from pryced import *
 
 def convert_author_string(author_raw):
@@ -83,23 +84,6 @@ def myshop_parse_book(soup, create_flag):
    """
    if create_flag > 0:
       serial = u''
-#      # извлечь теги 'td' без атрибутов, в каждом найти контекст со словом 'Серия'
-#      try:
-#         serial = u''
-#         td2 = soup.findAll(lambda tag: len(tag.attrs) == 0 and tag.name == 'td')
-#         for td2_row in td2:
-#            i = 0
-#            for cnt in td2_row.contents:
-#               i += 1
-#               try:
-#                  if cnt.find(U'Серия') > -1:
-#                     serial = td2_row.contents[i].string
-#                     break
-#               except:
-#                  pass
-#      except:
-#         serial = u''
-
       try:
          title_tag = soup.find('title').string.split(' | ')
          book_name = title_tag[0].split(' - ')
@@ -129,10 +113,10 @@ def myshop_parse_book(soup, create_flag):
    noindex_cnx = td.find('noindex')
    if noindex_cnx != None and len(noindex_cnx.contents) > 0:
       for line in noindex_cnx.contents:
-         if line.find(u'в наличии') > -1:
+         if isinstance(line, str) and line.find(u'в наличии') > -1:
             b = td.find('b')
             if b != None:
-               price = b.string.split('&nbsp;')[0]
+               price = re.search(r'[0-9]+', b.string).group(0)
             break
 
    return (title, author, serial, isbn, u'', price)
@@ -428,7 +412,7 @@ def test_url(url_name):
     #   if url_name.find(u'my-shop.ru') > -1:
     #      (title, author, serial, isbn, desc2, price) = myshop_parse_book2(url_name, 1)
     #   else:
-       opener = urllib2.build_opener()
+       opener = urllib.request.build_opener()
        # 'Referer' нужен, чтобы обмануть "умные" сайты (setbook.ru), 
        # которые умеют определять страну и дают цену не в рублях
        opener.addheaders = [('Referer', url_name),
@@ -436,7 +420,7 @@ def test_url(url_name):
          ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
          ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
        f = opener.open(url_name)
-#          f = urllib2.urlopen(url_name) 
+#          f = urllib.request.urlopen(url_name) 
        datas = f.read()
        f.close()
        soup = BeautifulSoup(datas)
@@ -460,14 +444,15 @@ def test_url(url_name):
           (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, 1)
        elif url_name.find(u'books.ru') > -1:
           (title, author, serial, isbn, desc2, price) = booksru_parse_book(soup, 1)
-       print u'title:  ' + tr_(title)
-       print u'author: ' + tr_(author)
-       print u'serial: ' + tr_(serial)
-       print u'isbn:   ' + tr_(isbn)
-       print u'price:  ' + price
+       print (u'title:  ' + tr_(title))
+       print (u'author: ' + tr_(author))
+       print (u'serial: ' + tr_(serial))
+       print (u'isbn:   ' + tr_(isbn))
+       print (u'price:  ' + price)
        if desc2 == None:
           desc2 = tr_(u'ОШИБКА РАЗБОРА!!!')
-       print u'desc2:  ' + tr_(desc2)
+       print (u'desc2:  ' + tr_(desc2))
        return (title, author, serial, isbn, desc2, price)
-   except Exception, e:
-       print e
+   except Exception as e:
+       print (e)
+
