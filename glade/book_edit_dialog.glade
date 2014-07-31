@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires gtk+ 3.0 -->
+  <!-- interface-requires gtk+ 3.10 -->
   <object class="GtkAction" id="actionSave">
     <property name="stock_id">gtk-apply</property>
     <signal name="activate" handler="onEditSave" object="book_edit_dialog" swapped="no"/>
@@ -62,15 +62,17 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="box1">
+          <object class="GtkBox" id="box1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkHBox" id="box2">
+              <object class="GtkBox" id="box2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label1">
                     <property name="visible">True</property>
@@ -104,10 +106,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box3">
+              <object class="GtkBox" id="box3">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label2">
                     <property name="visible">True</property>
@@ -141,10 +144,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box4">
+              <object class="GtkBox" id="box4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label3">
                     <property name="visible">True</property>
@@ -178,10 +182,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box5">
+              <object class="GtkBox" id="box5">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label4">
                     <property name="visible">True</property>

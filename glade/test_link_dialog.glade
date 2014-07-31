@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires gtk+ 3.0 -->
+  <!-- interface-requires gtk+ 3.10 -->
   <object class="GtkDialog" id="test_link_dialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -33,15 +33,17 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="box10">
+          <object class="GtkBox" id="box10">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkHBox" id="box12">
+              <object class="GtkBox" id="box12">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label9">
                     <property name="visible">True</property>
@@ -78,10 +80,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box13">
+              <object class="GtkBox" id="box13">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label10">
                     <property name="visible">True</property>
@@ -117,10 +120,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box14">
+              <object class="GtkBox" id="box14">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label11">
                     <property name="visible">True</property>
@@ -156,10 +160,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box15">
+              <object class="GtkBox" id="box15">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label12">
                     <property name="visible">True</property>
@@ -195,10 +200,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box16">
+              <object class="GtkBox" id="box16">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label13">
                     <property name="visible">True</property>
@@ -234,10 +240,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="box17">
+              <object class="GtkBox" id="box17">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkLabel" id="label14">
                     <property name="visible">True</property>

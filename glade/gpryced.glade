@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires gtk+ 3.0 -->
+  <!-- interface-requires gtk+ 3.10 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkAction" id="actionCut">
     <property name="stock_id">gtk-cut</property>
@@ -28,9 +28,10 @@
     <property name="default_width">800</property>
     <property name="default_height">800</property>
     <child>
-      <object class="GtkVBox" id="box1">
+      <object class="GtkBox" id="box1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkToolbar" id="toolbar1">
             <property name="visible">True</property>
@@ -87,13 +88,15 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="box7">
+          <object class="GtkBox" id="box7">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkVPaned" id="vpaned1">
+              <object class="GtkPaned" id="vpaned1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+        	<property name="orientation">vertical</property>
                 <child>
                   <object class="GtkScrolledWindow" id="scrolledwindow1">
                     <property name="visible">True</property>
@@ -216,9 +219,10 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHBox" id="box_graph">
+                  <object class="GtkBox" id="box_graph">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+        	    <property name="orientation">horizontal</property>
                     <child>
                       <placeholder/>
                     </child>
@@ -243,15 +247,17 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="box2">
+          <object class="GtkBox" id="box2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="orientation">horizontal</property>
             <child>
-              <object class="GtkVBox" id="box4">
+              <object class="GtkBox" id="box4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="border_width">2</property>
                 <property name="homogeneous">True</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="label3">
                     <property name="visible">True</property>
@@ -284,11 +290,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="box5">
+              <object class="GtkBox" id="box5">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="border_width">3</property>
                 <property name="homogeneous">True</property>
+        	<property name="orientation">vertical</property>
                 <child>
                   <object class="GtkEntry" id="tfPattern">
                     <property name="visible">True</property>
@@ -331,16 +338,18 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="box6">
+              <object class="GtkBox" id="box6">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="border_width">3</property>
                 <property name="homogeneous">True</property>
+        	<property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkHBox" id="box10">
+                  <object class="GtkBox" id="box10">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="homogeneous">True</property>
+        	    <property name="orientation">horizontal</property>
                     <child>
                       <object class="GtkButton" id="buttonFind">
                         <property name="label">gtk-find</property>
@@ -381,10 +390,11 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHBox" id="box8">
+                  <object class="GtkBox" id="box8">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="homogeneous">True</property>
+        	    <property name="orientation">horizontal</property>
                     <child>
                       <object class="GtkButton" id="buttonCheck">
                         <property name="label" translatable="yes">Проверить</property>
@@ -437,15 +447,17 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="box3">
+          <object class="GtkBox" id="box3">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="border_width">3</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkHBox" id="box9">
+              <object class="GtkBox" id="box9">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="spacing">9</property>
+        	<property name="orientation">horizontal</property>
                 <child>
                   <object class="GtkImage" id="image2">
                     <property name="visible">True</property>

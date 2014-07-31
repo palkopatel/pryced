@@ -1,24 +1,25 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8
 
-try:
-    import sys, pygtk
-    pygtk.require('2.0')
-except:
-    print u'Не удалось импортировать модуль PyGTK'
-    sys.exit(1)
-
-import gtk
+import sys
 import datetime # для datetime.datetime.now()
+
 from pryced import *
-# эти библиотеки включены для сборки в exe'шника в windows
-import cairo, gio, pango, atk, pangocairo
+
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
 
 from numpy import arange
-import matplotlib.pyplot as plt
-import matplotlib.dates
-from matplotlib.backends.backend_gtk import FigureCanvasGTK
-from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as NavigationToolbar
+
+import matplotlib
+matplotlib.use('gtk3agg')
+from matplotlib import pyplot as plt
+#import matplotlib.pyplot as plt
+#import matplotlib.dates
+from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvasGTK
+from matplotlib.backends.backend_gtk3 import NavigationToolbar2GTK3 as NavigationToolbar
+
 import time
 import matplotlib as mpl
 
@@ -71,7 +72,7 @@ class App(object):
             return
          widget.builder.get_object("toolbuttonPaste").set_sensitive(1)
       except:
-         print 'no cut!'
+         print ('no cut!')
 
    def onPaste(widget, action):
          # копировать нечего
@@ -98,8 +99,8 @@ class App(object):
                model.remove(widget.iter_src)
                widget.iter_src = None
                widget.builder.get_object("toolbuttonPaste").set_sensitive(0)
-            except sqlite3.Error, e:
-               print u'Ошибка при выполнении запроса:', e.args[0]
+            except sqlite3.Error as e:
+               print (u'Ошибка при выполнении запроса:', e.args[0])
 
    def onEditBook(widget, action):
       event = widget.treeview.get_selection()
@@ -131,15 +132,15 @@ class App(object):
           widget.builder.get_object("tfAuthor").set_text(row[1])
           widget.builder.get_object("tfTitle").set_text(row[2])
           break
-      widget.book_dlg.show_all()
+      widget.book_dlg.show()
       widget.book_dlg.run()
-      widget.book_dlg.hide_all()
+      widget.book_dlg.hide()
       
    def onEditSave(widget, event):
        try:
-           isbn = unicode(widget.builder.get_object("tfISBN").get_text())
-           author = unicode(widget.builder.get_object("tfAuthor").get_text())
-           title = unicode(widget.builder.get_object("tfTitle").get_text())
+           isbn = widget.builder.get_object("tfISBN").get_text()
+           author = widget.builder.get_object("tfAuthor").get_text()
+           title = widget.builder.get_object("tfTitle").get_text()
            book_id = int(widget.builder.get_object("tfBookId").get_text())
            try:
                # обновить в базе
@@ -150,11 +151,11 @@ class App(object):
                # обновить на экране (в модели)
                widget.model_edit.set(widget.iter_edit, F_NAME, author + ', ' + title)
                widget.model_edit.set(widget.iter_edit, F_ISBN, isbn)
-           except sqlite3.Error, e:
-               print e.args[0]
-               print u'Сбой обновления книги в базе'
+           except sqlite3.Error as e:
+               print (e.args[0])
+               print (u'Сбой обновления книги в базе')
        except:
-           print u'Сбой чтения значений из полей'
+           print (u'Сбой чтения значений из полей')
 
    def onRowActivated(widget, cell, point, render_cell):
       model = widget.treeview.get_model()
@@ -163,7 +164,7 @@ class App(object):
          try:
             cell.set_text(model.get_value(model.get_iter(point), F_NAME))
          except:
-            print u'Сбой в таблице!'
+            print (u'Сбой в таблице!')
       elif len(point) == 1:
          widget.onEditBook(None)
          
@@ -220,7 +221,7 @@ class App(object):
                 min_price = int(row[0])
                 min_timestamp = timestamp1
          plt.plot(x, y, label=link[1])
-      print min_price, min_timestamp
+      print (min_price, min_timestamp)
       plt.legend(loc='upper left')
       plt.grid(True)
       plt.xlabel(u'Дата')
@@ -235,7 +236,7 @@ class App(object):
    def filtering(self, model, path, iter, user_data):
        # проверять "корни" дерева - книги
        if model.iter_depth(iter) == 0:
-           title = unicode(model.get_value(iter, F_NAME)).lower()
+           title = model.get_value(iter, F_NAME).lower()
            if title.find(user_data) == -1:
                model.set_value(iter, F_IS_VISIBLE, False)
            else:
@@ -243,7 +244,7 @@ class App(object):
 
    def onFind(widget, event):
       try:
-         widget.model.foreach(widget.filtering, unicode(event.get_text()).lower())
+         widget.model.foreach(widget.filtering, event.get_text().lower())
       except:
          pass
 
@@ -265,14 +266,14 @@ class App(object):
       widget.builder.get_object("tfISBN").set_text(isbn)
       widget.builder.get_object("tfDesc2").set_text(desc2)
       widget.builder.get_object("tfPrice").set_text(price)
-      widget.test_dlg.show_all()
+      widget.test_dlg.show()
       widget.test_dlg.run()
-      widget.test_dlg.hide_all()
+      widget.test_dlg.hide()
 
    def getBooks(self, cursor0):
       # перебор книг в базе
       cursor0.execute('select pr.*, ifnull(prices.price, 0) price, \
-                        case pr.ptime when 0 then 0 else strftime("%Y-%m-%d", pr.ptime) end shorttime, \
+                        case pr.ptime when 0 then "" else strftime("%Y-%m-%d", pr.ptime) end shorttime, \
                         case pr.ptime when 0 then 0 else strftime("%s", pr.ptime) end seconds, \
                         strftime("%s", datetime("now")) now, \
                         ifnull(links.state, 0) state \
@@ -318,21 +319,22 @@ class App(object):
       rows = self.getBooks(self.connect.cursor())
       books_id = -1
       iter = None
-      fg_gray = gtk.gdk.Color('gray')
-      fg_red = gtk.gdk.Color('red')
-      pix_ozon = gtk.gdk.pixbuf_new_from_file('pics/ozon-16.png')
-      pix_readru = gtk.gdk.pixbuf_new_from_file('pics/readru-16.png')
-      pix_myshop = gtk.gdk.pixbuf_new_from_file('pics/myshop-16.png')
-      pix_ukazka = gtk.gdk.pixbuf_new_from_file('pics/ukazka-16.png')
-      pix_bolero = gtk.gdk.pixbuf_new_from_file('pics/bolero-16.png')
-      pix_labiru = gtk.gdk.pixbuf_new_from_file('pics/labiru-16.png')
-      pix_bgshop = gtk.gdk.pixbuf_new_from_file('pics/bgshop-16.png')
-      pix_setbook = gtk.gdk.pixbuf_new_from_file('pics/setbook-16.png')
+      fg_gray = Gdk.color_parse('gray')
+      fg_red = Gdk.color_parse('red')
+      pix_ozon = GdkPixbuf.Pixbuf.new_from_file('pics/ozon-16.png')
+      pix_readru = GdkPixbuf.Pixbuf.new_from_file('pics/readru-16.png')
+      pix_myshop = GdkPixbuf.Pixbuf.new_from_file('pics/myshop-16.png')
+      pix_ukazka = GdkPixbuf.Pixbuf.new_from_file('pics/ukazka-16.png')
+      pix_bolero = GdkPixbuf.Pixbuf.new_from_file('pics/bolero-16.png')
+      pix_labiru = GdkPixbuf.Pixbuf.new_from_file('pics/labiru-16.png')
+      pix_bgshop = GdkPixbuf.Pixbuf.new_from_file('pics/bgshop-16.png')
+      pix_setbook = GdkPixbuf.Pixbuf.new_from_file('pics/setbook-16.png')
+      pix_knigaru = GdkPixbuf.Pixbuf.new_from_file('pics/knigaru-16.png')
       hasGraph = 0
       for row in rows:
          url_name = row[3]
-#         print '====='
-#         for cell in row: print cell
+#         print ('=====')
+#         for cell in row: print (cell)
          if url_name.find(u'ozon.ru') > -1:
             pix = pix_ozon
          elif url_name.find(u'read.ru') > -1:
@@ -349,13 +351,15 @@ class App(object):
             pix = pix_bgshop
          elif url_name.find(u'setbook.ru') > -1:
             pix = pix_setbook
+         elif url_name.find(u'kniga.ru') > -1:
+            pix = pix_knigaru
          else:
             pix = None
          bottom_price = ''
          fg_pricecurrent = None
          # давно не обновлявшиеся книги выделить серым цветом
          # 11 - текущее время
-         if (long(row[11]) - long(row[10]))/60/60/24/14 > 0:
+         if (int(row[11]) - int(row[10]))/60/60/24/14 > 0:
             fg_timestamp = fg_gray
          else:
             fg_timestamp = None
@@ -367,8 +371,12 @@ class App(object):
          # "покинули" текущую книгу
          if books_id != row[0] :
             is_visible = True
-            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible])
-#            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible, row[12]])
+
+#            print (type(row[2]), type(row[4]), type(row[5]), type(row[8]), type(row[0]), type(bottom_price), type(pix), type(row[9]), type(row[10]), type(fg_timestamp), type(fg_pricecurrent), type(row[1]), type(row[7]))
+            
+            
+            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], int(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible])
+#            iter = self.model.append(None, [row[2], row[4], row[5], row[8], row[0], bottom_price, pix, row[9], int(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], is_visible, row[12]])
             books_id = row[0]
          # на первом проходе вывести график
          if hasGraph == 0:
@@ -409,21 +417,21 @@ class App(object):
                            F_PRICE_CUR, iprice)
             # row[11] - текущее время в секундах
             if iseconds > 0:
-                if iprice == imin and (long(row[11]) - long(iseconds))/60/60/24/5 <= 0:
+                if iprice == imin and (int(row[11]) - int(iseconds))/60/60/24/5 <= 0:
                    self.model.set(iter, F_SITEICON, 'gtk-go-down')
                 else:
                    self.model.set(iter, F_SITEICON, '')
             else:
                 self.model.set(iter, 
-                               F_UNIXSEC, long(row[10]), 
+                               F_UNIXSEC, int(row[10]), 
                                F_TIMESTAMP, row[9], 
                                F_FG_TIMESTAMP, None)
-#         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True, row[12]])
-         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], long(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True])
+#         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], int(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True, row[12]])
+         self.model.append(iter, [url_name, row[4], row[5], row[8], row[0], bottom_price, pix, row[9], int(row[10]), fg_timestamp, fg_pricecurrent, row[1], row[7], True])
          if fg_pricecurrent != None: self.model.set(iter, F_FG_PRICE_CUR, fg_pricecurrent)
        
    def __init__(self):
-      self.builder = gtk.Builder()
+      self.builder = Gtk.Builder()
       # Загружаем интерфейс
       self.builder.add_from_file("glade/gpryced.glade")
       # присоединяем сигналы
@@ -454,8 +462,8 @@ class App(object):
 #      widget.canvas.set_size_request(800, 600)
       self.canvas.show()
       self.toolbar = NavigationToolbar(self.canvas, self.main_window)
-      self.graphview.pack_start(self.canvas, True, True)
-      self.graphview.pack_start(self.toolbar, False, False)
+      self.graphview.pack_start(self.canvas, True, True, 0)
+      self.graphview.pack_start(self.toolbar, False, False, 0)
       self.book_id = -1
       
       self.loadModel()
@@ -475,10 +483,10 @@ class App(object):
 
       # отображает данные, хранящиеся в list_store1
       self.treeview.set_model(model=self.filter)
-      self.main_window.show_all()
+      self.main_window.show()
 
    def close_app(self, widget):
-      gtk.main_quit()
+      Gtk.main_quit()
 
 if __name__ == "__main__":
     # признак запуска на windows-python
@@ -486,4 +494,4 @@ if __name__ == "__main__":
        sys.stdout = open('gpryced_stdout.log', 'w')
        sys.stderr = open('gpryced_stderr.log', 'w')
     app = App()
-    gtk.main()
+    Gtk.main()

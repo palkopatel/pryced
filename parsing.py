@@ -444,14 +444,14 @@ def test_url(url_name):
           (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, 1)
        elif url_name.find(u'books.ru') > -1:
           (title, author, serial, isbn, desc2, price) = booksru_parse_book(soup, 1)
-       print (u'title:  ' + tr_(title))
-       print (u'author: ' + tr_(author))
-       print (u'serial: ' + tr_(serial))
-       print (u'isbn:   ' + tr_(isbn))
+       print (u'title:  ' + title)
+       print (u'author: ' + author)
+       print (u'serial: ' + serial)
+       print (u'isbn:   ' + isbn)
        print (u'price:  ' + price)
        if desc2 == None:
-          desc2 = tr_(u'ОШИБКА РАЗБОРА!!!')
-       print (u'desc2:  ' + tr_(desc2))
+          desc2 = (u'ОШИБКА РАЗБОРА!!!')
+       print (u'desc2:  ' + desc2)
        return (title, author, serial, isbn, desc2, price)
    except Exception as e:
        print (e)

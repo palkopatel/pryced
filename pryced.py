@@ -5,12 +5,6 @@
 # скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
 # ukazka.ru, bolero.ru, labirint.ru, bgshop.ru, setbook.ru, kniga.ru
 
-import locale
-try:
-   loc_is_ru_RU = locale.getlocale()[0].find('ru_RU') == 0
-except:
-   loc_is_ru_RU = False
-
 import gettext
 gettext.install('pryced', './locale')
 
@@ -39,11 +33,6 @@ import time # для подсчета времени сканирования с
 try:
    from ctypes import windll
    handle = windll.kernel32.GetStdHandle(-11)
-except:
-   pass
-
-try:
-   import trans
 except:
    pass
 
@@ -76,8 +65,6 @@ def console_color(color):
    windll.kernel32.SetConsoleTextAttribute(handle, color)
 
 def tr_(str):
-   if loc_is_ru_RU == False:
-      return str.encode('trans')
    return str
 
     
