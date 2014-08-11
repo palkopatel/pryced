@@ -42,8 +42,11 @@ def ozonru_parse_book(soup, create_flag):
       try:
          author = content.find('p', {'itemprop':'author'}).find('a').string
       except:
-         # автора нет
-         pass
+         try:
+            author = content.find('p', {'itemprop':'author'}).string.split(':')[1].strip()
+         except:
+            # автора нет
+            pass
    try:
       content = soup.find('div', {'class':'bSaleColumn'})
       price = content.find('span', {'itemprop':'price'}).string.split('.')[0]
