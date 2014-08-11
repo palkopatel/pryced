@@ -330,6 +330,7 @@ class App(object):
       pix_bgshop = GdkPixbuf.Pixbuf.new_from_file('pics/bgshop-16.png')
       pix_setbook = GdkPixbuf.Pixbuf.new_from_file('pics/setbook-16.png')
       pix_knigaru = GdkPixbuf.Pixbuf.new_from_file('pics/knigaru-16.png')
+      pix_booksru = GdkPixbuf.Pixbuf.new_from_file('pics/booksru-16.png')
       hasGraph = 0
       for row in rows:
          url_name = row[3]
@@ -353,6 +354,8 @@ class App(object):
             pix = pix_setbook
          elif url_name.find(u'kniga.ru') > -1:
             pix = pix_knigaru
+         elif url_name.find(u'books.ru') > -1:
+            pix = pix_booksru
          else:
             pix = None
          bottom_price = ''
