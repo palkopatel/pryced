@@ -43,8 +43,11 @@ def ozonru_parse_book(soup, create_flag):
       try:
          author = content.find('p', {'itemprop':'author'}).find('a').string
       except:
-         # автора нет
-         pass
+         try:
+            author = content.find('p', {'itemprop':'author'}).string.split(':')[1].strip()
+         except:
+            # автора нет
+            pass
    try:
       content = soup.find('div', {'class':'bSaleColumn'})
       price = content.find('span', {'itemprop':'price'}).string.split('.')[0]
@@ -61,7 +64,7 @@ def readru_parse_book(soup, create_flag):
    if create_flag > 0:
       title = soup.find('h1').string
       table = soup.find('table', {'id':'book_fields_1'})
-      isbn = table.find('td', {'class':'isbn'}).find('span').string
+      isbn = table.find('td', {'class':'isbn'}).find('span').contents[1].string
       try:
          author = table.find('td', {'class':'author'}).find('a').string
       except:
@@ -73,7 +76,7 @@ def readru_parse_book(soup, create_flag):
    try:
       table = soup.find('table', {'id':'book_fields_3'})
       price_tag = table.find('span', {'class':'price'})
-      price = price_tag.contents[0].strip()
+      price = price_tag.contents[1].string.strip()
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
@@ -219,6 +222,10 @@ def labiru_parse_book(soup, create_flag):
          title = title_tag['content']
       except:
          title = u''
+      try:
+         serial = product.find('div', attrs={'class':'series'}).find('a').string
+      except:
+         serial = u''
    else:
       title = u''
       author = u''
@@ -232,7 +239,12 @@ def labiru_parse_book(soup, create_flag):
       available = availibility.find('span')
       if available != None:
          #<span class="buying-price-val-number">399</span> 
-         price = product.find('span', attrs={'class':'buying-price-val-number'}).string
+         price_tag = product.find('span', attrs={'class':'buying-price-val-number'})
+         if price_tag == None:
+            price_tag = product.find('span', attrs={'class':'buying-pricenew-val-number'})
+         if price_tag == None:
+            price_tag = product.find('span', attrs={'class':'buying-priceold-val-number'})
+         price = price_tag.string
       else:
          price = u'0'
    except:
