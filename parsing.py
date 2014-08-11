@@ -235,6 +235,10 @@ def labiru_parse_book(soup, create_flag):
          title = title_tag['content']
       except:
          title = u''
+      try:
+         serial = product.find('div', attrs={'class':'series'}).find('a').string
+      except:
+         serial = u''
    else:
       title = u''
       author = u''
@@ -248,7 +252,12 @@ def labiru_parse_book(soup, create_flag):
       available = availibility.find('span')
       if available != None:
          #<span class="buying-price-val-number">399</span> 
-         price = product.find('span', attrs={'class':'buying-price-val-number'}).string
+         price_tag = product.find('span', attrs={'class':'buying-price-val-number'})
+         if price_tag == None:
+            price_tag = product.find('span', attrs={'class':'buying-pricenew-val-number'})
+         if price_tag == None:
+            price_tag = product.find('span', attrs={'class':'buying-priceold-val-number'})
+         price = price_tag.string
       else:
          price = u'0'
    except:
