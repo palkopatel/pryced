@@ -60,7 +60,7 @@ def readru_parse_book(soup, create_flag):
    if create_flag > 0:
       title = soup.find('h1').string
       table = soup.find('table', {'id':'book_fields_1'})
-      isbn = table.find('td', {'class':'isbn'}).find('span').string
+      isbn = table.find('td', {'class':'isbn'}).find('span').contents[1].string
       try:
          author = table.find('td', {'class':'author'}).find('a').string
       except:
@@ -72,7 +72,7 @@ def readru_parse_book(soup, create_flag):
    try:
       table = soup.find('table', {'id':'book_fields_3'})
       price_tag = table.find('span', {'class':'price'})
-      price = price_tag.contents[0].strip()
+      price = price_tag.contents[1].string.strip()
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
