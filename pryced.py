@@ -316,6 +316,7 @@ def run_load_new_price(connect, now_day, silent_mode):
                    left join books on links.book = books.id \
                    where links.urlname not like "%bolero.ru%" \
                      and links.urlname not like "%bgshop.ru%" \
+                     and links.urlname not like "%books.ru%" \
                    group by links.id, links.author, links.title \
                    order by books.author, books.title, links.urlname')
    rows = cursor.fetchall()
