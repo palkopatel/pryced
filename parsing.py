@@ -75,8 +75,12 @@ def readru_parse_book(soup, create_flag):
          serial = u''
    try:
       table = soup.find('table', {'id':'book_fields_3'})
-      price_tag = table.find('span', {'class':'price'})
-      price = price_tag.contents[1].string.strip()
+      price_tag = table.find('span', {'class':'price', 'title':u'Цена по акции'})
+      if price_tag == None:
+         price_tag = table.find('span', {'class':'book_price_old_digits'})
+      else:
+         price_tag = price_tag.contents[0]
+      price = price_tag.string.strip()
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
