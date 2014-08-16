@@ -11,13 +11,20 @@ gettext.install('pryced', './locale')
 try:
    from bs4 import BeautifulSoup
 except:
-   print (_('Need to work BeautifulSoup library.\nIt can be found at http://www.crummy.com/software/BeautifulSoup/bs4/download/\n'))
+   print (_('BeautifulSoup library should be installed to correct work.\nIt can be found at http://www.crummy.com/software/BeautifulSoup/bs4/download\n'))
    exit()
+try:
+   import lxml
+except:
+   print (_('python-lxml package should be installed to correct work BeautifulSoup.\nIt can be found at https://pypi.python.org/pypi/lxml\n'))
+   exit()
+#import html5lib
+# https://pypi.python.org/pypi/html5lib
+# https://pypi.python.org/pypi/six
 import datetime # для datetime.datetime.now()
 import sqlite3
 import sys
 import urllib.request
-#import codecs
 import queue
 import threading
 import time # для подсчета времени сканирования ссылок
@@ -171,7 +178,11 @@ def load_link(connect, now_day, url_name, create_flag):
          return -err.code
       datas = f.read()
       f.close()
-      soup = BeautifulSoup(datas)
+      # comparison of parsers http://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-a-parser
+      # на новых python3 > 3.2 быстро работает встроенный 'html.parser', 
+      # на старых версиях - сишный 'lxml'
+      # 'html5lib' проигрывает по скорости во всех версиях python3 в два раза!
+      soup = BeautifulSoup(datas, 'lxml')
       if url_name.find('ozon.r') > -1:
          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, create_flag)
       elif url_name.find('read.r') > -1: 

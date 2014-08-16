@@ -20,11 +20,25 @@ msgstr ""
 
 #: pryced.py:21
 msgid ""
-"Need to work BeautifulSoup library.\n"
-"It can be found at http://code.google.com/p/pryced/downloads/list\n"
+"BeautifulSoup library should be installed to correct work.\n"
+"It can be found at http://www.crummy.com/software/BeautifulSoup/bs4/download\n"
 msgstr ""
 "Для работы нужна библиотека BeautifulSoup\n"
-"(Можно найти на сайте: http://code.google.com/p/pryced/downloads/list)\n"
+"(Можно найти на сайте: http://www.crummy.com/software/BeautifulSoup/bs4/download)\n"
+
+#: pryced.py:19
+msgid ""
+"python-lxml package should be installed to correct work BeautifulSoup.\n"
+"It can be found at https://pypi.python.org/pypi/lxml\n"
+msgstr ""
+"Для работы BeautifulSoup нужна библиотека python-lxml\n"
+"(Можно найти на сайте:  https://pypi.python.org/pypi/lxml\n"
+
+#: pryced.py:35
+msgid ""
+"Cannot import parsing module!\n"
+msgstr ""
+"Ошибка импортирования модуля parsing.py!"
 
 #: pryced.py:89 pryced.py:99 pryced.py:107
 msgid "Error on create table:"
