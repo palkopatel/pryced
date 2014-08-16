@@ -163,7 +163,12 @@ def load_link(connect, now_day, url_name, create_flag):
          ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
          ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
          ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
-      f = opener.open(url_name)
+      try:
+         f = opener.open(url_name)
+      except urllib.error.HTTPError as err:
+         if create_flag > 0:
+            print (_(u'Stopping due to error:'), err)
+         return -err.code
       datas = f.read()
       f.close()
       soup = BeautifulSoup(datas)
@@ -218,7 +223,7 @@ def load_link(connect, now_day, url_name, create_flag):
                print (e)
       return int(float(price.replace(',', '.')))
    except Exception as e:
-      print (_(u'Failed to load links:'), url_name)
+      print (_(u'Failed to load link:'), url_name)
       print (e)
       return 0
 
@@ -257,7 +262,7 @@ class countThread (threading.Thread):
               self.sz = queue_out.qsize()
                # стереть вывод и переместиться в начало строки
               sys.stdout.write('\r' + 5 * ' ' + '\r')
-              print(self.sz),
+              sys.stdout.write(str(self.sz))
               sys.stdout.flush() # допечатать вывод
        print (u'\n')
 
@@ -292,7 +297,7 @@ def run_load_new_price(connect, now_day, silent_mode):
    # потому что слишком большое количество серьёзно загружает проц
    # 25 - нормально работает на 3-Мбит соединении
    # 10 - нормально работает на 1-Мбит соединении
-   for i in range(10):
+   for i in range(25):
       t = parseThread(i)
       t.daemon = True # если True, то программа не завершится, пока не закончится выполнение потока
       t.start()
@@ -315,7 +320,8 @@ def run_load_new_price(connect, now_day, silent_mode):
                    left join books on links.book = books.id \
                    where links.urlname not like "%bolero.ru%" \
                      and links.urlname not like "%bgshop.ru%" \
-                     and links.id in (select link from prices group by link having date(timestamp) >  date("now",  "-1 year")) \
+                     and links.urlname not like "%books.ru%" \
+                     and links.id in (select link from prices group by link having date(timestamp) > date("now",  "-1 year")) \
                    group by links.id, links.author, links.title \
                    order by books.author, books.title, links.urlname')
    rows = cursor.fetchall()
@@ -333,6 +339,8 @@ def run_load_new_price(connect, now_day, silent_mode):
    count_now_min = 0
    # обработка результатов из очереди, которыю заполнили потоки
    results = []
+   error_codes = dict()
+   error_links = []
    while not queue_out.empty():
       (row, price, thread_name) = queue_out.get()
       queue_out.task_done()
@@ -345,12 +353,23 @@ def run_load_new_price(connect, now_day, silent_mode):
             print_link_info(row, price)
             count_now_min += 1
       else:
-         count_zero += 1
+         if price == 0:
+            count_zero += 1
+         else:
+            idx = str(-price)
+            error_codes[idx] = error_codes.get(idx, 0) + 1
+            error_links.append(row[1])
    print (_(u'Stats:\n\ttotal links:'), count_all, \
        _(u'\n\tin min:'), count_min, \
        _(u'\n\tnew links in min:'), count_now_min, \
        _(u'\n\tin zero:'), count_zero, \
        _(u'\n\tothers:'), (count_all - count_min - count_zero))
+   if len(error_codes) > 0:
+      print (_(u'\tthe some requests were finished with errors'))
+      for code in error_codes:
+         print (_(u'\terror code:'), code, _(u', counter:'), error_codes[code])
+      for url_name in error_links: 
+         print (_(u'Failed to load link:'), url_name)
    # сохранить только непустые результаты в базу   
    if len(results) > 0:
       insert_new_price_into_db(connect, results)
