@@ -11,7 +11,7 @@ gettext.install('pryced', './locale')
 try:
    from bs4 import BeautifulSoup
 except:
-   print (_('Need to work BeautifulSoup library.\nIt can be found at http://code.google.com/p/pryced/downloads/list\n'))
+   print (_('Need to work BeautifulSoup library.\nIt can be found at http://www.crummy.com/software/BeautifulSoup/bs4/download/\n'))
    exit()
 import datetime # для datetime.datetime.now()
 import sqlite3
