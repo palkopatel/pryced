@@ -9,12 +9,6 @@ import gettext
 gettext.install('pryced', './locale')
 
 try:
-   from parsing import *
-except:
-   print (_('Cannot import parsing module!\n'))
-   exit()
-
-try:
    from bs4 import BeautifulSoup
 except:
    print (_('Need to work BeautifulSoup library.\nIt can be found at http://code.google.com/p/pryced/downloads/list\n'))
@@ -27,6 +21,12 @@ import urllib.request
 import queue
 import threading
 import time # для подсчета времени сканирования ссылок
+
+try:
+   from parsing import *
+except:
+   print (_('Cannot import parsing module!\n'))
+   exit()
 
 #from memory_profiler import profile
 
