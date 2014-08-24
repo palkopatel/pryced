@@ -170,7 +170,7 @@ def load_link(connect, now_day, url_name, create_flag):
          ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
       try:
          f = opener.open(url_name)
-      except urllib2.HTTPError as err:
+      except (urllib2.HTTPError, urllib2.URLError) as err:
          if create_flag > 0:
             print _(u'Stopping due to error:'), err
          return -err.code
