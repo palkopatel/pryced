@@ -170,10 +170,15 @@ def load_link(connect, now_day, url_name, create_flag):
          ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
       try:
          f = opener.open(url_name)
-      except (urllib2.HTTPError, urllib2.URLError) as err:
+      except (urllib2.HTTPError) as err:
          if create_flag > 0:
-            print _(u'Stopping due to error:'), err
+            print _(u'Stopping due to HTTPError:'), err
          return -err.code
+      except (urllib2.URLError) as err:
+         if create_flag > 0:
+            print _(u'Stopping due to URLError:'), err
+         code = e.reason[0]
+         return code if code < 0 else -code
       datas = f.read()
       f.close()
       soup = BeautifulSoup(datas)
