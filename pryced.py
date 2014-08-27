@@ -177,7 +177,7 @@ def load_link(connect, now_day, url_name, create_flag):
       except (urllib2.URLError) as err:
          if create_flag > 0:
             print _(u'Stopping due to URLError:'), err
-         code = e.reason[0]
+         code = err.reason[0]
          return code if code < 0 else -code
       datas = f.read()
       f.close()
