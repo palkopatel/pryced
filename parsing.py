@@ -6,6 +6,7 @@
 from BeautifulSoup import BeautifulSoup
 import urllib2
 import subprocess
+import re
 from pryced import *
 
 def convert_author_string(author_raw):
@@ -122,7 +123,7 @@ def myshop_parse_book(soup, create_flag):
          if line.find(u'в наличии') > -1:
             b = td.find('b')
             if b != None:
-               price = b.string.split('&nbsp;')[0]
+               price = re.findall('^\d*', b.string.replace('&nbsp;', ''))[0]
             break
 
    return (title, author, serial, isbn, u'', price)
