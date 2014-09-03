@@ -79,7 +79,7 @@ def readru_parse_book(soup, create_flag):
          price_tag = table.find('span', {'class':'book_price_old_digits'})
       else:
          price_tag = price_tag.contents[0]
-      price = price_tag.string.strip()
+      price = price_tag.string.replace('&nbsp;', '').strip()
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
@@ -90,23 +90,6 @@ def myshop_parse_book(soup, create_flag):
    """
    if create_flag > 0:
       serial = u''
-#      # извлечь теги 'td' без атрибутов, в каждом найти контекст со словом 'Серия'
-#      try:
-#         serial = u''
-#         td2 = soup.findAll(lambda tag: len(tag.attrs) == 0 and tag.name == 'td')
-#         for td2_row in td2:
-#            i = 0
-#            for cnt in td2_row.contents:
-#               i += 1
-#               try:
-#                  if cnt.find(U'Серия') > -1:
-#                     serial = td2_row.contents[i].string
-#                     break
-#               except:
-#                  pass
-#      except:
-#         serial = u''
-
       try:
          title_tag = soup.find('title').string.split(' | ')
          book_name = title_tag[0].split(' - ')
