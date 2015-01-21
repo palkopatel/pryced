@@ -50,7 +50,8 @@ def ozonru_parse_book(soup, create_flag):
             pass
    try:
       content = soup.find('div', {'class':'bSaleColumn'})
-      price = content.find('span', {'itemprop':'price'}).string.split('.')[0]
+      # Символ \xa0 это неразрывный пробел в кодировке UTF-8 в кодировке Latin1 (ISO 8859-1). он же '&nbsp;'
+      price = content.find('span', {'class':'eOzonPrice_main mSaleBlock'}).string.replace(u'\xa0', u'') 
    except:
       price = u'0'
 
