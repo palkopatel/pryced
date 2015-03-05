@@ -63,25 +63,13 @@ def readru_parse_book(soup, create_flag):
    """
    title = author = serial = isbn = u''
    if create_flag > 0:
-      title = soup.find('h1').string
+      title = soup.find('span', {'itemprop':'name'}).string.strip()
+      isbn = soup.find('span', {'itemprop':'isbn'}).string.strip()
+      author = soup.find('span', {'itemprop':'author'}).string.strip()
       table = soup.find('table', {'id':'book_fields_1'})
-      isbn = table.find('td', {'class':'isbn'}).find('span').contents[1].string
-      try:
-         author = table.find('td', {'class':'author'}).find('a').string
-      except:
-         author = u''
-      try:
-         serial = table.find('td', {'class':'series'}).find('a').string
-      except:
-         serial = u''
    try:
-      table = soup.find('table', {'id':'book_fields_3'})
-      price_tag = table.find('span', {'class':'price', 'title':u'Цена по акции'})
-      if price_tag == None:
-         price_tag = table.find('span', {'class':'book_price_old_digits'})
-      else:
-         price_tag = price_tag.contents[0]
-      price = price_tag.string.replace('&nbsp;', '').strip()
+      price_tag = soup.find('div', {'class':'book_price3__fullprice'})
+      price = price_tag.contents[0].string.strip()
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
