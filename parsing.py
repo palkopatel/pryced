@@ -69,7 +69,7 @@ def readru_parse_book(soup, create_flag):
       table = soup.find('table', {'id':'book_fields_1'})
    try:
       price_tag = soup.find('div', {'class':'book_price3__fullprice'})
-      price = price_tag.contents[0].string.strip()
+      price = price_tag.contents[0].string.strip().replace('&nbsp;', '')
    except:
       price = u'0'
    return (title, author, serial, isbn, u'', price)
