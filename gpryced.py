@@ -101,6 +101,69 @@ class App(object):
             except sqlite3.Error, e:
                print u'Ошибка при выполнении запроса:', e.args[0]
 
+   def onGraphShop(widget, action):
+#      if widget.shop_dlg == None:
+      try:
+         for ax in widget.figure_shop.axes:
+            widget.figure_shop.delaxes(ax)
+      except:
+          widget.figure_shop = plt.figure()
+          widget.figure_shop.autofmt_xdate()
+          widget.canvas_shop = FigureCanvasGTK(widget.figure_shop) # a gtk.DrawingArea
+          widget.figure_shop.subplots_adjust(bottom=0.1)
+          widget.canvas_shop.set_size_request(800, 600)
+          widget.canvas_shop.show()
+          widget.builder.add_from_file("glade/shop_graph.glade")
+          widget.shop_dlg = widget.builder.get_object("shop_graph_dialog")
+          widget.graphview_shop = widget.builder.get_object("dialog-vbox1")
+          widget.graphview_shop.pack_start(widget.canvas_shop, True, True)
+#          widget.figure_shop.canvas_shop.draw()
+
+      site_name = 'ozon.ru'
+      try:
+         gtk_tree_selection = widget.treeview.get_selection()
+         if gtk_tree_selection.count_selected_rows() > 0:
+            (model, iter_sel) = gtk_tree_selection.get_selected()
+            # брать только ссылки, а не книги
+            if len(model.get_path(iter_sel)) == 2:
+               url_name = model.get_value(iter_sel, F_NAME)
+               site_name = url_name.split('/')[2]
+      except:
+         pass
+
+      cursor = widget.connect.cursor()
+      rows = cursor.execute('select avg(prices.price) as avg_price, prices.timestamp, count(prices.price) cnt \
+                              , (min(prices.price) + max(prices.price))/2 as exp1 \
+                              from links \
+                              join prices on prices.link=links.id \
+                              where links.urlname like ? \
+                              group by prices.timestamp \
+                              having count(prices.price) > 10', ['%'+site_name+'%'] )
+      rows = cursor.fetchall()
+      x = []
+      y = []
+      y2 = []
+      for row in rows:
+         timestamp1 = datetime.datetime(*time.strptime(row[1], "%Y-%m-%d %H:%M:%S")[0:5])
+         x.append(timestamp1)
+         y.append(row[0])
+         y2.append(row[3])
+      plt.plot(x, y, label=site_name)
+      plt.plot(x, y2, label='X:' + site_name)
+      plt.legend(loc='upper left')
+      plt.grid(True)
+      plt.xlabel(u'Дата')
+      plt.ylabel(u'Цена')
+#      plt.annotate('min', xy=(min_price, min_timestamp), 
+#                   xytext=(0.5,0.5),textcoords='offset points', 
+#                   arrowprops=dict(facecolor='black', shrink=0.05))
+
+#      plt.title(title)
+#      widget.figure_shop.canvas.draw()
+      widget.shop_dlg.show_all()
+      widget.shop_dlg.run()
+      widget.shop_dlg.hide_all()
+       
    def onEditBook(widget, action):
       event = widget.treeview.get_selection()
       model_pre, iter_src_pre = event.get_selected()
@@ -198,38 +261,44 @@ class App(object):
          except:
              site_name = link[1]
          ids.append([link[0], site_name])
-
-      min_price = 0
       cursor = widget.connect.cursor()
       query = 'select price, timestamp \
                from prices where link = ? \
                order by timestamp desc \
                LIMIT 200'
       for link in ids:
+         min_price = 0
+         min_timestamp = None
          rows = cursor.execute( query, [link[0]] )
          rows = cursor.fetchall()
          x = []
          y = []
          for row in rows:
             timestamp = row[1]
-            timestamp1 = datetime.datetime(*time.strptime(row[1], "%Y-%m-%d %H:%M:%S")[0:5])
+            timestamp1 = datetime.datetime(*time.strptime(row[1], '%Y-%m-%d %H:%M:%S')[0:5])
             #timestamp = matplotlib.dates.date2num(timestamp1)
             x.append(timestamp1)
-            y.append(row[0])
+            y.append(int(row[0]) )
             if int(row[0]) < min_price or min_price == 0:
                 min_price = int(row[0])
                 min_timestamp = timestamp1
-         plt.plot(x, y, label=link[1])
-      print min_price, min_timestamp
+         if len(x) > 0:
+             ax = widget.figure.add_subplot(111)
+             ax.plot(x, y, label=link[1])
+             try:
+                ax.annotate(u'мин=' + str(min_price) + u', дата=' + str(min_timestamp)[:10], 
+                   xy=(min_timestamp, min_price), xycoords='data', 
+                   arrowprops=dict(facecolor=ax.lines[len(ax.lines)-1].get_c(), shrink=0.05), 
+                   xytext=(-50, 50), textcoords='offset points',
+                   color=ax.lines[len(ax.lines)-1].get_c())
+             except Exception, e:
+                print e
+                continue
       plt.legend(loc='upper left')
       plt.grid(True)
       plt.xlabel(u'Дата')
       plt.ylabel(u'Цена')
       plt.title(title)
-#         plt.annotate('min', xy=(min_price, min_timestamp), 
-#                      xytext=(0.5,0.5),textcoords='offset points', 
-#                      arrowprops=dict(facecolor='black', shrink=0.05))
-      #plt.show()
       widget.figure.canvas.draw()
 
    def filtering(self, model, path, iter, user_data):
@@ -328,6 +397,8 @@ class App(object):
       pix_labiru = gtk.gdk.pixbuf_new_from_file('pics/labiru-16.png')
       pix_bgshop = gtk.gdk.pixbuf_new_from_file('pics/bgshop-16.png')
       pix_setbook = gtk.gdk.pixbuf_new_from_file('pics/setbook-16.png')
+      pix_knigaru = gtk.gdk.pixbuf_new_from_file('pics/knigaru-16.png')
+      pix_booksru = gtk.gdk.pixbuf_new_from_file('pics/booksru-16.png')
       hasGraph = 0
       for row in rows:
          url_name = row[3]
@@ -349,6 +420,10 @@ class App(object):
             pix = pix_bgshop
          elif url_name.find(u'setbook.ru') > -1:
             pix = pix_setbook
+         elif url_name.find(u'kniga.ru') > -1:
+            pix = pix_knigaru
+         elif url_name.find(u'books.ru') > -1:
+            pix = pix_booksru
          else:
             pix = None
          bottom_price = ''
@@ -437,6 +512,7 @@ class App(object):
 
       self.test_dlg = None
       self.book_dlg = None
+      self.shop_dlg = None
 
       self.treeview = self.builder.get_object("treeview1")
       self.model = self.builder.get_object("treestore1")

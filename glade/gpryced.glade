@@ -17,6 +17,9 @@
     <property name="stock_id">gtk-clear</property>
     <signal name="activate" handler="onFindReset" object="tfPattern" swapped="no"/>
   </object>
+  <object class="GtkAction" id="actionGraphShop">
+    <signal name="activate" handler="onGraphShop" swapped="no"/>
+  </object>
   <object class="GtkAction" id="actionPaste">
     <property name="stock_id">gtk-paste</property>
     <signal name="activate" handler="onPaste" object="treeview-selection" swapped="no"/>
@@ -73,6 +76,21 @@
                 <property name="label" translatable="yes">Редактировать</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-edit</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbuttonGraphShop">
+                <property name="use_action_appearance">False</property>
+                <property name="related_action">actionGraphShop</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">График магазина</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-dialog-info</property>
               </object>
               <packing>
                 <property name="expand">False</property>
