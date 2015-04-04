@@ -1,0 +1,8 @@
+*/tests
+backups
+hosting
+
+*.db
+*.py[cod]
+*.py~
+
