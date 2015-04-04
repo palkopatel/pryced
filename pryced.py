@@ -28,6 +28,11 @@ import urllib.request
 import queue
 import threading
 import time # для подсчета времени сканирования ссылок
+import socket
+
+# timeout in seconds
+timeout = 10
+socket.setdefaulttimeout(timeout)
 
 try:
    from parsing import *

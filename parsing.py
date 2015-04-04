@@ -50,7 +50,11 @@ def ozonru_parse_book(soup, create_flag):
             pass
    try:
       content = soup.find('div', {'class':'bSaleColumn'})
-      price = content.find('span', {'itemprop':'price'}).string.split('.')[0]
+      check = content.find('h3')
+      if check == None or (check != None and check.string != None and 'Нет в продаже' not in check.string):
+         price = re.search(r'[0-9]+', content.find('span', {'itemprop':'price'}).string).group(0)
+      else:
+         price = '0'
    except:
       price = '0'
 
@@ -62,25 +66,17 @@ def readru_parse_book(soup, create_flag):
    """
    title = author = serial = isbn = ''
    if create_flag > 0:
-      title = soup.find('h1').string
-      table = soup.find('table', {'id':'book_fields_1'})
-      isbn = table.find('td', {'class':'isbn'}).find('span').contents[1].string
-      try:
-         author = table.find('td', {'class':'author'}).find('a').string
-      except:
-         author = ''
-      try:
-         serial = table.find('td', {'class':'series'}).find('a').string
-      except:
-         serial = ''
+      title = soup.find('span', {'itemprop':'name'}).string.strip()
+      isbn = soup.find('span', {'itemprop':'isbn'}).string.strip()
+      author = soup.find('span', {'itemprop':'author'}).string.strip()
    try:
-      table = soup.find('table', {'id':'book_fields_3'})
-      price_tag = table.find('span', {'class':'price', 'title':'Цена по акции'})
-      if price_tag == None:
-         price_tag = table.find('span', {'class':'book_price_old_digits'})
+      price_block = soup.find('div', {'class':'book_price3'})
+      state = price_block.find('div', {'class':'book_price3__title_ok'})
+      if state != None and 'На складе' not in state.string:
+         price = '0'
       else:
-         price_tag = price_tag.contents[0]
-      price = price_tag.string.strip()
+         price_tag = price_block.find('div', {'class':'book_price3__fullprice'})
+         price = price_tag.contents[0].string.strip().replace('\xa0', '')
    except:
       price = '0'
    return (title, author, serial, isbn, '', price)
@@ -89,6 +85,7 @@ def myshop_parse_book(soup, create_flag):
    """ разбор страницы с my-shop.ru
 
    """
+   title = author = serial = isbn = ''
    if create_flag > 0:
       serial = ''
       try:
@@ -108,11 +105,6 @@ def myshop_parse_book(soup, create_flag):
          if span_row != None and len(span_row.contents) == 1:
             if span_row.string != None and span_row.string.find('ISBN') > -1:
                isbn = span_row.string.split(': ')[1]
-   else:
-      title = ''
-      author = ''
-      serial = ''
-      isbn = ''
    # извлечь цену из определенно отформатированной ячейки
    price = '0'
    td = soup.find('td', attrs={'class':'bgcolor_2 list_border'})
@@ -123,7 +115,7 @@ def myshop_parse_book(soup, create_flag):
          if isinstance(line, str) and line.find('в наличии') > -1:
             b = td.find('b')
             if b != None:
-               price = re.search(r'[0-9]+', b.string).group(0)
+               price = re.search(r'[0-9]+', b.string.replace('\xa0', '')).group(0)
             break
 
    return (title, author, serial, isbn, '', price)
@@ -132,30 +124,22 @@ def ukazka_parse_book(soup, create_flag):
    """ разбор страницы с ukazka.ru
 
    """
+   title = author = serial = isbn = ''
    if create_flag > 0:
       title = soup.find('h1').string
       if title[len(title)-1]=='.':
          title = title[0:-1]
       #  найти теги div с определенным атрибутом class
       table = soup.findAll('div', attrs={'class':'lpad20 bot_pad'})
-      try:
-         author_raw = table[0].contents[0].find('b').contents[0]
-         author = convert_author_string(author_raw)
-      except:
-         author = ''
-      try:
-         serial = table[9].contents[0].find('a').contents[0]
-      except:
-         serial = ''
-      try:
-         isbn = table[2].contents[1].contents[0]
-      except:
-         isbn = ''
-   else:
-      title = ''
-      author = ''
-      serial = ''
-      isbn = ''
+      for row in table:
+         t = row.find('b', attrs={'itemprop':'isbn'})
+         if t != None:
+            isbn = t.string
+            continue
+         t = row.find('b', attrs={'itemprop':'author'})
+         if t != None:
+            author = convert_author_string(t.string)
+            continue
    try:
       price = soup.find('span', attrs={'class':'price'}).contents[0]
    except:
@@ -166,7 +150,7 @@ def bolero_parse_book(soup, create_flag):
    """ разбор страницы с bolero.ru
 
    """
-   serial = ''
+   title = author = serial = isbn = ''
    if create_flag > 0:
       title_tag = soup.find('title').string.split('-')
       title = title_tag[0].strip()
@@ -190,10 +174,6 @@ def bolero_parse_book(soup, create_flag):
                break
          if done >= 2:
             break
-   else:
-      title = ''
-      author = ''
-      isbn = ''
    price_tag = soup.find('div', attrs={'class':'price'})
    if price_tag != None:
        price = price_tag.contents[0].string.replace('&nbsp;', '')
@@ -205,7 +185,7 @@ def labiru_parse_book(soup, create_flag):
    """ разбор страницы с labirint.ru
 
    """
-   serial = ''
+   title = author = serial = isbn = ''
    #<div id="product-specs">
    product = soup.find('div', attrs={'id':'product-specs'})
    if create_flag > 0:
@@ -230,10 +210,6 @@ def labiru_parse_book(soup, create_flag):
          serial = product.find('div', attrs={'class':'series'}).find('a').string
       except:
          serial = ''
-   else:
-      title = ''
-      author = ''
-      isbn = ''
    try:
       #<div class="prodtitle-availibility rang-available"><span>На складе</span></div>
       #<div class="prodtitle-availibility rang-expected"><span>Ожидается</span></div>
@@ -259,7 +235,7 @@ def bgshop_parse_book(soup, create_flag):
    """ разбор страницы с bgshop.ru
 
    """
-   serial = ''
+   title = author = serial = isbn = ''
    product = soup.find('div', attrs={'id':'ctl00_cph_ucGoodCard_pnl_card'})
    if create_flag > 0:
        try:
@@ -274,10 +250,6 @@ def bgshop_parse_book(soup, create_flag):
            isbn = product.find('span', attrs={'id':'ctl00_cph_ucGoodCard_lbl_IsbnAsIs'}).string
        except:
            isbn = ''
-   else:
-       title = ''
-       author = ''
-       isbn = ''
    try:
        # хитроумная замена - это борьба с неразрывным пробелом (символ с кодом 160)
        price = soup.find('span', attrs={'class':'price'}).string.split(',')[0].replace('\xa0', '')
@@ -289,7 +261,7 @@ def setbook_parse_book(soup, create_flag):
    """ разбор страницы с setbook.ru
 
    """
-   serial = ''
+   title = author = serial = isbn = ''
    if create_flag > 0:
        try:
            title = soup.find('div', attrs={'class':'row_product_name'}).string
@@ -303,10 +275,6 @@ def setbook_parse_book(soup, create_flag):
            isbn = soup.find('div', attrs={'class':'row_product_model'}).string.split(':')[1].replace(' ', '')
        except:
            isbn = ''
-   else:
-       title = ''
-       author = ''
-       isbn = ''
    try:
        # '`' - разделитель тысяч
        price = soup.find('div', attrs={'class':'row_product_price'}).string.split('\xa0')[0].replace('`', '')
@@ -321,11 +289,7 @@ def knigaru_parse_book(soup, create_flag):
    """ разбор страницы с kniga.ru
 
    """
-   serial = ''
-   title = ''
-   author = ''
-   isbn = ''
-   desc2 = ''
+   title = author = serial = isbn = desc2 = ''
    productDescription = soup.find('div', attrs={'id':'productDescription'})
    if create_flag > 0:
        try:
@@ -370,12 +334,7 @@ def booksru_parse_book(soup, create_flag):
    """ разбор страницы с books.ru
 
    """
-   serial = ''
-   title = ''
-   author = ''
-   isbn = ''
-   desc2 = ''
-
+   title = author = serial = isbn = desc2 = ''
    if create_flag > 0:
       try:
          bookInfo = soup.find('td', attrs={'class':'book-info'})
@@ -413,7 +372,8 @@ def booksru_parse_book(soup, create_flag):
       except:
          pass
    try:
-      price = soup.find('span', attrs={'class':'yspan'}).contents[0].string.strip()
+      right_block = soup.find('td', attrs={'class':'right-block'})
+      price = right_block.find('span', attrs={'class':'yspan'}).contents[0].string.strip()
    except:
       price = '0'
    return (title, author, serial, isbn, desc2, price)

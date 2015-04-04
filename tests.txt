@@ -1,0 +1,30 @@
+обычная цена
+http://www.labirint.ru/books/441924/
+http://www.ozon.ru/context/detail/id/7437003/
+http://my-shop.ru/shop/books/990063.html
+http://read.ru/id/3945138/
+http://www.kniga.ru/books/1236990
+http://www.setbook.ru/books/2329774.html
+http://www.ukazka.ru/product-book122243.html
+http://www.books.ru/books/garri-potter-i-filosofskii-kamen--eksklyuzivnaya-stereo-vario-otkrytka-v-podarok-3635647/
+
+цена больше 1000
+http://www.labirint.ru/books/452105/
+http://www.ozon.ru/context/detail/id/27440156/
+http://my-shop.ru/shop/books/1866061.html
+http://read.ru/id/3871079/
+http://www.setbook.ru/books/2330048.html
+http://www.kniga.ru/books/1132114
+http://www.ukazka.ru/product-book192223.html
+http://www.books.ru/books/programmirovanie-na-python-4-e-izdanie-i-tom-841171/
+
+нет в наличии
+http://www.labirint.ru/books/399521/
+http://www.ozon.ru/context/detail/id/6465807/
+http://my-shop.ru/shop/books/1516605.html
+http://read.ru/id/1206047/
+http://www.kniga.ru/books/406719
+http://www.setbook.ru/books/1225620.html
+http://www.ukazka.ru/product-book138688.html
+http://www.books.ru/books/vstretilis-pogovorili-509512/
+
