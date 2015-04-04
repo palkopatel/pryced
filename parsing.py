@@ -395,6 +395,8 @@ def test_url(url_name):
          ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
          ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
          ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
+       if 'ozon.r' in url_name:
+         url_name += '?localredirect=no'
        f = opener.open(url_name)
 #          f = urllib.request.urlopen(url_name) 
        datas = f.read()

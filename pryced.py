@@ -176,6 +176,9 @@ def load_link(connect, now_day, url_name, create_flag):
          ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
          ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
       try:
+         # боремся с 'интелектуальными' сайтами, которые показывают неправильную валюту
+         if 'ozon.r' in url_name:
+            url_name += '?localredirect=no'
          f = opener.open(url_name)
       except urllib.error.HTTPError as err:
          if create_flag > 0:
@@ -353,7 +356,7 @@ def run_load_new_price(connect, now_day, silent_mode):
    count_min = 0
    count_zero = 0
    count_now_min = 0
-   # обработка результатов из очереди, которыю заполнили потоки
+   # обработка результатов из очереди, которую заполнили потоки
    results = []
    error_codes = dict()
    error_links = []
