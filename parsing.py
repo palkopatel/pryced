@@ -109,9 +109,8 @@ def myshop_parse_book(soup, create_flag):
    price = '0'
    td = soup.find('td', attrs={'class':'bgcolor_2 list_border'})
 
-   noindex_cnx = td.find('noindex')
-   if noindex_cnx != None and len(noindex_cnx.contents) > 0:
-      for line in noindex_cnx.contents:
+   if td != None and len(td.contents) > 0:
+      for line in td.contents:
          if isinstance(line, str) and line.find('в наличии') > -1:
             b = td.find('b')
             if b != None:
