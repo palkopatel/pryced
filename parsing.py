@@ -76,7 +76,7 @@ def readru_parse_book(soup, create_flag):
          price = '0'
       else:
          price_tag = price_block.find('div', {'class':'book_price3__fullprice'})
-         price = price_tag.contents[0].string.strip().replace('\xa0', '')
+         price = price_tag.find('div', {'class': 'floatLeft'}).string.strip().replace('\xa0', '')
    except:
       price = '0'
    return (title, author, serial, isbn, '', price)
@@ -400,7 +400,7 @@ def test_url(url_name):
 #          f = urllib.request.urlopen(url_name) 
        datas = f.read()
        f.close()
-       soup = BeautifulSoup(datas)
+       soup = BeautifulSoup(datas, 'lxml')
        if url_name.find('ozon.r') > -1:
           (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, 1)
        if url_name.find('read.r') > -1:
