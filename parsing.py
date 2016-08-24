@@ -33,21 +33,14 @@ def ozonru_parse_book(soup, create_flag):
    """
    title = author = serial = isbn = ''
    if create_flag > 0:
-      content = soup.find('div', {'class':'bContentBlock'})
+      content = soup.find('div', {'class':'bContentColumn'})
       title = content.find('h1', {'itemprop':'name'}).string.strip()
-      # в ISBN еще зачем-то записан год. его надо убрать
-      # в общем виде ISBN выглядит так {ISBN<нужное значение>; год}
-      isbn = content.find('p', {'itemprop':'isbn'}).string.split(';')[0].strip()
-      if isbn.find('ISBN') == 0: # удалить текст в начале строки и убрать пробелы
-         isbn = isbn[4:].strip()
-      try:
-         author = content.find('p', {'itemprop':'author'}).find('a').string
-      except:
-         try:
-            author = content.find('p', {'itemprop':'author'}).string.split(':')[1].strip()
-         except:
-            # автора нет
-            pass
+      isbn = content.find('div', {'itemprop':'isbn'}).string.strip()
+      author = content.find('div', {'itemprop':'author'})
+      if author != None:
+         author = author.find('a').string
+      else:
+         author = ''
    try:
       content = soup.find('div', {'class':'bSaleColumn'})
       check = content.find('h3')
@@ -70,13 +63,12 @@ def readru_parse_book(soup, create_flag):
       isbn = soup.find('span', {'itemprop':'isbn'}).string.strip()
       author = soup.find('span', {'itemprop':'author'}).string.strip()
    try:
-      price_block = soup.find('div', {'class':'book_price3'})
-      state = price_block.find('div', {'class':'book_price3__title_ok'})
-      if state != None and 'На складе' not in state.string:
-         price = '0'
+      state = soup.find('div', {'class': 'read2__book_price__title_ok'})
+      if state != None and any(x in str(state.string).lower() for x in ('на складе','в наличии')):
+         price = soup.find('span', {'itemprop':'price'}).string.strip()
+         price = price.split(' ')[0]
       else:
-         price_tag = price_block.find('div', {'class':'book_price3__fullprice'})
-         price = price_tag.find('div', {'class': 'floatLeft'}).string.strip().replace('\xa0', '')
+         price = '0'
    except:
       price = '0'
    return (title, author, serial, isbn, '', price)
