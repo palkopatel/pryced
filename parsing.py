@@ -382,8 +382,10 @@ def test_url(url_name):
        opener = urllib.request.build_opener()
        # 'Referer' нужен, чтобы обмануть "умные" сайты (setbook.ru), 
        # которые умеют определять страну и дают цену не в рублях
+       # Прикинемся ботом; адреса здесь: https://support.google.com/webmasters/answer/80553
        opener.addheaders = [('Referer', url_name),
-         ('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+         ('User-agent', 'Googlebot/2.1 (+http://www.google.com/bot.html)' if 'kniga.r' in url_name else 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+         ('X-Forwarded-For', '66.249.66.1' if 'kniga.r' in url_name else ''),
          ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
          ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
        if 'ozon.r' in url_name:
