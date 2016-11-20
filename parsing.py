@@ -137,41 +137,6 @@ def ukazka_parse_book(soup, create_flag):
       price = '0'
    return (title, author, serial, isbn, '', price)
 
-def bolero_parse_book(soup, create_flag):
-   """ разбор страницы с bolero.ru
-
-   """
-   title = author = serial = isbn = ''
-   if create_flag > 0:
-      title_tag = soup.find('title').string.split('-')
-      title = title_tag[0].strip()
-      author = title_tag[1].strip()
-      done = 0
-      for table in soup.findAll('table'):
-         for row in table.findAll('tr'):
-            for cell in row.findAll('td'):
-               try:
-                  if cell.string.find('ISBN') > -1:
-                     isbn = row.find('b').string
-                     done += 1
-                     break
-                  if cell.string.find('Серия') > -1:
-                     serial = row.find('a').string
-                     done += 1
-                     break
-               except:
-                  pass
-            if done >= 2 :
-               break
-         if done >= 2:
-            break
-   price_tag = soup.find('div', attrs={'class':'price'})
-   if price_tag != None:
-       price = price_tag.contents[0].string.replace('&nbsp;', '')
-   else:
-       price = '0'
-   return (title, author, serial, isbn, '', price)
-
 def labiru_parse_book(soup, create_flag):
    """ разбор страницы с labirint.ru
 
@@ -368,7 +333,28 @@ def booksru_parse_book(soup, create_flag):
    except:
       price = '0'
    return (title, author, serial, isbn, desc2, price)
-   
+
+def chitaig_parse_book(soup, create_flag):
+   """ разбор страницы с chitai-gorod.ru
+
+   """
+   title = author = serial = isbn = desc2 = ''
+   if create_flag > 0:
+      try:
+         bookInfo = soup.find('div', attrs={'class':'descr'})
+         titleDiv = bookInfo.find('div', attrs={'class':'name'})
+         title = titleDiv.find('span', attrs={'itemprop':'name'}).find('h1').string.strip()
+         author = titleDiv.find('span', attrs={'itemprop':'creator'}).find('p').string.strip()
+         txtDiv = bookInfo.find('div', attrs={'class':'txt'})
+         isbn = txtDiv.find('span', attrs={'itemprop':'isbn'}).find('p').string.split(':')[1].strip()
+      except:
+         pass
+   try:
+      price = soup.find('meta', attrs={'itemprop':'price'})['content']
+   except:
+      price = '0'
+   return (title, author, serial, isbn, desc2, price)
+
 def test_url(url_name):
    """ функция для тестирования (запуск с аргументом -t <ссылка>)
 
@@ -397,14 +383,10 @@ def test_url(url_name):
        soup = BeautifulSoup(datas, 'lxml')
        if url_name.find('ozon.r') > -1:
           (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, 1)
-       if url_name.find('read.r') > -1:
-          (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, 1)
        elif url_name.find('my-shop.r') > -1:
           (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, 1)
        elif url_name.find('ukazka.r') > -1:
           (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, 1)
-       elif url_name.find('bolero.r') > -1:
-          (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, 1)
        elif url_name.find('labirint.r') > -1:
           (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, 1)
        elif url_name.find('bgshop.r') > -1:
@@ -415,6 +397,8 @@ def test_url(url_name):
           (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, 1)
        elif url_name.find('books.r') > -1:
           (title, author, serial, isbn, desc2, price) = booksru_parse_book(soup, 1)
+       elif url_name.find('chitai-gorod') > -1:
+          (title, author, serial, isbn, desc2, price) = chitaig_parse_book(soup, 1)
        print ('title:  ' + title)
        print ('author: ' + author)
        print ('serial: ' + serial)

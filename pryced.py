@@ -2,8 +2,8 @@
 # -*- coding: utf-8
 
 # prices watcher (ozon.ru, read.ru)
-# скрипт для наблюдения за указанными книгами на ozon.ru, read.ru, my-shop.ru,
-# ukazka.ru, bolero.ru, labirint.ru, bgshop.ru, setbook.ru, kniga.ru
+# скрипт для наблюдения за указанными книгами на ozon.ru, my-shop.ru,
+# ukazka.ru, labirint.ru, bgshop.ru, setbook.ru, kniga.ru, chitai-gorod.ru
 
 import gettext
 gettext.install('pryced', './locale')
@@ -89,7 +89,7 @@ def connect_to_base():
     try:
         cursor.execute('create table IF NOT EXISTS books \
         (id integer primary key AUTOINCREMENT, \
-        isbn text, title text, author text)')
+        isbn text, title text, author text, isbn_raw text)')
         connect.commit()
     except sqlite3.Error as e:
         print (_('Error on create table:'), e.args[0])
@@ -132,7 +132,7 @@ def insert_new_book(connect, isbn, title, author):
       # (например, ozon.ru)
       if len(isbn) > 0: param = ['%'+isbn+'%']
       else: param = ['']
-      cursor.execute('select id from books where isbn like ?', param)
+      cursor.execute('select id from books where REPLACE(isbn, \'-\', \'\') like ?', param)
       books_data = cursor.fetchall()
       cursor.close()
       if len(books_data) > 0:
@@ -141,8 +141,8 @@ def insert_new_book(connect, isbn, title, author):
       else:
          try:
             cursor = connect.cursor()
-            cursor.execute( 'insert into books (isbn, title, author) \
-               values (?, ?, ?)', (isbn, title, author) )
+            cursor.execute( 'insert into books (isbn, title, author, isbn_raw) \
+               values (?, ?, ?, REPLACE(?, \'-\', \'\'))', (isbn, title, author, isbn) )
             book_id = cursor.lastrowid
             cursor.close()
             connect.commit()
@@ -194,14 +194,10 @@ def load_link(connect, now_day, url_name, create_flag):
       soup = BeautifulSoup(datas, 'lxml')
       if url_name.find('ozon.r') > -1:
          (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, create_flag)
-      elif url_name.find('read.r') > -1: 
-         (title, author, serial, isbn, desc2, price) = readru_parse_book(soup, create_flag)
       elif url_name.find('my-shop.r') > -1: 
          (title, author, serial, isbn, desc2, price) = myshop_parse_book(soup, create_flag)
       elif url_name.find('ukazka.r') > -1: 
          (title, author, serial, isbn, desc2, price) = ukazka_parse_book(soup, create_flag)
-      elif url_name.find('bolero.r') > -1: 
-         (title, author, serial, isbn, desc2, price) = bolero_parse_book(soup, create_flag)
       elif url_name.find('labirint.r') > -1:
          (title, author, serial, isbn, desc2, price) = labiru_parse_book(soup, create_flag)
       elif url_name.find('bgshop.r') > -1:
@@ -212,6 +208,8 @@ def load_link(connect, now_day, url_name, create_flag):
          (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, create_flag)
       elif url_name.find('books.r') > -1:
          (title, author, serial, isbn, desc2, price) = booksru_parse_book(soup, create_flag)
+      elif url_name.find('chitai-gorod') > -1:
+         (title, author, serial, isbn, desc2, price) = chitaig_parse_book(soup, create_flag)
       else:
          return 0
       if create_flag > 0:
@@ -297,6 +295,7 @@ def countLinks(connect):
                    left join books on links.book = books.id\
                    where links.urlname not like "%bolero.ru%" \
                      and links.urlname not like "%bgshop.ru%" \
+                     and links.urlname not like "%read.ru%" \
                      and links.urlname not like "%books.ru%" \
                      and links.id in (select link from prices group by link having date(timestamp) >  date("now",  "-1 year")) \
                    ')
@@ -340,6 +339,7 @@ def run_load_new_price(connect, now_day, silent_mode):
                    left join books on links.book = books.id \
                    where links.urlname not like "%bolero.ru%" \
                      and links.urlname not like "%bgshop.ru%" \
+                     and links.urlname not like "%read.ru%" \
                      and links.urlname not like "%books.ru%" \
                      and links.id in (select link from prices group by link having date(timestamp) > date("now",  "-1 year")) \
                    group by links.id, links.author, links.title \
