@@ -130,7 +130,7 @@ def insert_new_book(connect, isbn, title, author):
       cursor = connect.cursor()
       # поиск по вхождению, т.к. некоторые сайты дают одной книге несколько ISBN
       # (например, ozon.ru)
-      if len(isbn) > 0: param = ['%'+isbn+'%']
+      if len(isbn) > 0: param = ['%'+isbn.replace('-', '')+'%']
       else: param = ['']
       cursor.execute('select id from books where REPLACE(isbn, \'-\', \'\') like ?', param)
       books_data = cursor.fetchall()
@@ -138,6 +138,7 @@ def insert_new_book(connect, isbn, title, author):
       if len(books_data) > 0:
          for book_data in books_data:
             book_id = book_data[0]
+         print (_('Existing book was found in DB'))
       else:
          try:
             cursor = connect.cursor()
@@ -146,6 +147,7 @@ def insert_new_book(connect, isbn, title, author):
             book_id = cursor.lastrowid
             cursor.close()
             connect.commit()
+            print (_('New book was added in DB'))
          except sqlite3.Error as e:
             print (_('Error on query execution:'), e.args[0])
    except sqlite3.Error as e:
