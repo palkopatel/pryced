@@ -31,7 +31,7 @@ import time # для подсчета времени сканирования с
 import socket
 
 # timeout in seconds
-timeout = 10
+timeout = 15
 socket.setdefaulttimeout(timeout)
 
 try:
