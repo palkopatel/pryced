@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8
 
 # prices watcher (ozon.ru, read.ru)
 # скрипт для наблюдения за указанными книгами на ozon.ru, my-shop.ru,
-# ukazka.ru, labirint.ru, bgshop.ru, setbook.ru, kniga.ru, chitai-gorod.ru
+# ukazka.ru, labirint.ru, setbook.ru, chitai-gorod.ru
 
 import gettext
 gettext.install('pryced', './locale')
@@ -299,6 +299,7 @@ def countLinks(connect):
                      and links.urlname not like "%bgshop.ru%" \
                      and links.urlname not like "%read.ru%" \
                      and links.urlname not like "%books.ru%" \
+                     and links.urlname not like "%kniga.ru%" \
                      and links.id in (select link from prices group by link having date(timestamp) >  date("now",  "-1 year")) \
                    ')
    rows = cursor.fetchall()
@@ -343,6 +344,7 @@ def run_load_new_price(connect, now_day, silent_mode):
                      and links.urlname not like "%bgshop.ru%" \
                      and links.urlname not like "%read.ru%" \
                      and links.urlname not like "%books.ru%" \
+                     and links.urlname not like "%kniga.ru%" \
                      and links.id in (select link from prices group by link having date(timestamp) > date("now",  "-1 year")) \
                    group by links.id, links.author, links.title \
                    order by books.author, books.title, links.urlname')
