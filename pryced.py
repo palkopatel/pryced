@@ -206,8 +206,6 @@ def load_link(connect, now_day, url_name, create_flag):
          (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, create_flag)
       elif url_name.find('setbook.r') > -1:
          (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, create_flag)
-      elif url_name.find('kniga.r') > -1:
-         (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, create_flag)
       elif url_name.find('books.r') > -1:
          (title, author, serial, isbn, desc2, price) = booksru_parse_book(soup, create_flag)
       elif url_name.find('chitai-gorod') > -1:

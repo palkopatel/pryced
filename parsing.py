@@ -53,26 +53,6 @@ def ozonru_parse_book(soup, create_flag):
 
    return (title, author, serial, isbn, '', price)
 
-def readru_parse_book(soup, create_flag):
-   """ разбор страницы с read.ru
-
-   """
-   title = author = serial = isbn = ''
-   if create_flag > 0:
-      title = soup.find('span', {'itemprop':'name'}).string.strip()
-      isbn = soup.find('span', {'itemprop':'isbn'}).string.strip()
-      author = soup.find('span', {'itemprop':'author'}).string.strip()
-   try:
-      state = soup.find('div', {'class': 'read2__book_price__title_ok'})
-      if state != None and any(x in str(state.string).lower() for x in ('на складе','в наличии')):
-         price = soup.find('span', {'itemprop':'price'}).string.strip()
-         price = price.split(' ')[0]
-      else:
-         price = '0'
-   except:
-      price = '0'
-   return (title, author, serial, isbn, '', price)
-
 def myshop_parse_book(soup, create_flag):
    """ разбор страницы с my-shop.ru
 
@@ -241,51 +221,6 @@ def setbook_parse_book(soup, create_flag):
       price = '0'
    return (title, author, serial, isbn, '', price)
 
-def knigaru_parse_book(soup, create_flag):
-   """ разбор страницы с kniga.ru
-
-   """
-   title = author = serial = isbn = desc2 = ''
-   productDescription = soup.find('div', attrs={'id':'productDescription'})
-   if create_flag > 0:
-       try:
-           title = productDescription.find('h1').string
-       except:
-           title = ''
-       try:
-           author = productDescription.find('span', attrs={'id':'authorsList'}).find('a').string
-       except:
-           author = ''
-       properties = productDescription.find('div', attrs={'id':'properties'})
-
-       # извлечь цену из определенно отформатированной ячейки
-       fields = properties.findAll('p')
-       for row in fields:
-          try:
-              row_str = row.find('span', attrs={'class':'fieldName'}).string
-              try:
-                 if row_str.find('ISBN:') > -1:
-                    isbn = row.contents[1].strip()
-              except:
-                 pass
-              try:
-                 if row_str.find('Серия:') > -1:
-                    serial = row.find('a').string
-              except:
-                 pass
-          except:
-             continue
-   try:
-       buyArea = productDescription.find('div', attrs={'id':'buyArea'})
-       price = buyArea.find('p', attrs={'id':'normalPrice'}).find('span').string
-       try:
-           desc2 = buyArea.find('p', attrs={'class':'normalPrice'}).find('span').string.split(' ')[0]
-       except:
-           pass
-   except:
-      price = '0'
-   return (title, author, serial, isbn, desc2, price)
-
 def booksru_parse_book(soup, create_flag):
    """ разбор страницы с books.ru
 
@@ -393,8 +328,6 @@ def test_url(url_name):
           (title, author, serial, isbn, desc2, price) = bgshop_parse_book(soup, 1)
        elif url_name.find('setbook.r') > -1:
           (title, author, serial, isbn, desc2, price) = setbook_parse_book(soup, 1)
-       elif url_name.find('kniga.r') > -1:
-          (title, author, serial, isbn, desc2, price) = knigaru_parse_book(soup, 1)
        elif url_name.find('books.r') > -1:
           (title, author, serial, isbn, desc2, price) = booksru_parse_book(soup, 1)
        elif url_name.find('chitai-gorod') > -1:
