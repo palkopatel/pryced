@@ -29,6 +29,11 @@ import queue
 import threading
 import time # для подсчета времени сканирования ссылок
 import socket
+try:
+   from incapsula import IncapSession
+except:
+   print (_('incapsula-cracker-py3 should be installed to correct work.\npip install incapsula-cracker-py3\n'))
+   exit()
 
 # timeout in seconds
 timeout = 15
@@ -169,26 +174,26 @@ def load_link(connect, now_day, url_name, create_flag):
          if len(data) > 0:
             print (_('Link on "%s. %s" exists in database!') % (tr_(data[0][0]), tr_(data[0][1])))
             return 0;
-#      if url_name.find('ozon.r') > -1:
-#         (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, create_flag)
-#      else:
-      opener = urllib.request.build_opener()
-      opener.addheaders = [('Referer', url_name),
-         ('User-agent', 'Googlebot/2.1 (+http://www.google.com/bot.html)' if 'kniga.r' in url_name else 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
-         ('X-Forwarded-For', '66.249.66.1' if 'kniga.r' in url_name else ''),
-         ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
-         ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
+#      opener = urllib.request.build_opener()
+#      opener.addheaders = [('Referer', url_name),
+#         ('User-agent', 'Googlebot/2.1 (+http://www.google.com/bot.html)' if 'kniga.r' in url_name else 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+#         ('X-Forwarded-For', '66.249.66.1' if 'kniga.r' in url_name else ''),
+#         ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
+#         ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
       try:
          # боремся с 'интелектуальными' сайтами, которые показывают неправильную валюту
          if 'ozon.r' in url_name:
             url_name += '?localredirect=no'
-         f = opener.open(url_name)
+#         f = opener.open(url_name)
+         session = IncapSession()
+         response = session.get(url_name)
+         datas = response.text
       except urllib.error.HTTPError as err:
          if create_flag > 0:
             print (_('Stopping due to error:'), err)
          return -err.code
-      datas = f.read()
-      f.close()
+#      datas = f.read()
+#      f.close()
       # comparison of parsers http://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-a-parser
       # на новых python3 > 3.2 быстро работает встроенный 'html.parser', 
       # на старых версиях - сишный 'lxml'

@@ -4,6 +4,7 @@
 # разбор html-кода в поисках характеристик книги
 
 from bs4 import BeautifulSoup
+from incapsula import IncapSession
 import urllib.request
 import subprocess
 import re
@@ -279,12 +280,15 @@ def chitaig_parse_book(soup, create_flag):
    title = author = serial = isbn = desc2 = ''
    if create_flag > 0:
       try:
-         bookInfo = soup.find('div', attrs={'class':'descr'})
-         titleDiv = bookInfo.find('div', attrs={'class':'name'})
-         title = titleDiv.find('span', attrs={'itemprop':'name'}).find('h1').string.strip()
-         author = titleDiv.find('span', attrs={'itemprop':'creator'}).find('p').string.strip()
-         txtDiv = bookInfo.find('div', attrs={'class':'txt'})
-         isbn = txtDiv.find('span', attrs={'itemprop':'isbn'}).find('p').string.split(':')[1].strip()
+         bookInfo = soup.find('div', attrs={'class':'product__common-info'})
+         titleDiv = bookInfo.find('h1', attrs={'class':'product__name'})
+         title = bookInfo.find('h1', attrs={'class':'product__name'}).string.strip()
+         author = bookInfo.find('a', attrs={'class':'product__author'}).string.strip()
+         items_list = bookInfo.find('ul', attrs={'class':'product__feature-list'})
+         for item in items_list.findAll('li'):
+            span = item.find('span')
+            if span != None and span.string.find('ISBN') > -1:
+               isbn = item.contents[2].string.strip()
       except:
          pass
    try:
@@ -298,26 +302,26 @@ def test_url(url_name):
 
    """
    try:
-    #   if url_name.find('ozon.r') > -1:
-    #      (title, author, serial, isbn, desc2, price) = ozonru_parse_book(url_name, 1)
-    #   if url_name.find('my-shop.r') > -1:
-    #      (title, author, serial, isbn, desc2, price) = myshop_parse_book2(url_name, 1)
-    #   else:
-       opener = urllib.request.build_opener()
+#       opener = urllib.request.build_opener()
        # 'Referer' нужен, чтобы обмануть "умные" сайты (setbook.ru), 
        # которые умеют определять страну и дают цену не в рублях
        # Прикинемся ботом; адреса здесь: https://support.google.com/webmasters/answer/80553
-       opener.addheaders = [('Referer', url_name),
-         ('User-agent', 'Googlebot/2.1 (+http://www.google.com/bot.html)' if 'kniga.r' in url_name else 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
-         ('X-Forwarded-For', '66.249.66.1' if 'kniga.r' in url_name else ''),
-         ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
-         ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
+#       opener.addheaders = [('Referer', url_name),
+#         ('User-agent', 'Googlebot/2.1 (+http://www.google.com/bot.html)' if 'chitai-gorod' in url_name else 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'),
+#         ('X-Forwarded-For', '104.132.7.254' if 'chitai-gorod' in url_name else ''),
+#         ('Accept-Language', 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'),
+#         ('Accept-Charset', 'Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.3')]
        if 'ozon.r' in url_name:
          url_name += '?localredirect=no'
-       f = opener.open(url_name)
-#          f = urllib.request.urlopen(url_name) 
-       datas = f.read()
-       f.close()
+#       f = opener.open(url_name)
+#       datas = f.read()
+#       f.close()
+
+#       if url_name.find('chitai-gorod') > -1:
+       session = IncapSession()
+       response = session.get(url_name)
+       datas = response.text
+
        soup = BeautifulSoup(datas, 'lxml')
        if url_name.find('ozon.r') > -1:
           (title, author, serial, isbn, desc2, price) = ozonru_parse_book(soup, 1)
