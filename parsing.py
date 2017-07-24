@@ -69,14 +69,17 @@ def myshop_parse_book(soup, create_flag):
          author = ''
          title = ''
 
-      # извлечь теги span, найти среди них содержащий слово 'ISBN'
       isbn = ''
-      span = soup.findAll('span', attrs={'class':'small1'})
-      for span_row in span:
-         # случай явного указания автора
-         if span_row != None and len(span_row.contents) == 1:
-            if span_row.string != None and span_row.string.find('ISBN') > -1:
-               isbn = span_row.string.split(': ')[1]
+      table = soup.findAll('table', attrs={'class':'bsp0 datavat v2'})
+      for row in table:
+         tr_list = row.findAll('tr')
+         for tr in tr_list:
+            td = tr.findAll('td')
+            if td != None and len(td) > 1:
+               span = td[0].find('span')
+               if span != None and span.string == 'ISBN':
+                  isbn = td[1].string
+                  break
    # извлечь цену из определенно отформатированной ячейки
    price = '0'
    td = soup.find('td', attrs={'class':'bgcolor_2 list_border'})
